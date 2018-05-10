@@ -25,7 +25,7 @@ const fetchCertificatesForVersion = async ({ version, fetchCertificates }) => {
     return await fetchCertificates();
 };
 
-export default async ({fetchApis, fetchPlugins, fetchGlobalPlugins, fetchConsumers, fetchConsumerCredentials, fetchConsumerAcls, fetchUpstreams, fetchTargets, fetchTargetsV11Active, fetchCertificates, fetchKongVersion}) => {
+export default async ({fetchApis, fetchPlugins, fetchGlobalPlugins, fetchConsumers, fetchConsumerCredentials, fetchConsumerAcls, fetchUpstreams, fetchTargets, fetchTargetsV11Active, fetchCertificates, fetchKongVersion, fetchServices, fetchRoutes, fetchServicePlugins}) => {
     const version = await fetchKongVersion();
     const apis = await fetchApis();
     const apisWithPlugins = await Promise.all(apis.map(async item => {
@@ -33,6 +33,20 @@ export default async ({fetchApis, fetchPlugins, fetchGlobalPlugins, fetchConsume
 
         return {...item, plugins};
     }));
+
+    let servicesWithPlugins = [];
+    let routes = [];
+
+    if (semVer.gte(version, '0.13.0')) {
+        const services = await fetchServices();
+        servicesWithPlugins = await Promise.all(services.map(async item => {
+            const plugins = await fetchServicePlugins(item.id);
+
+            return {...item, plugins};
+        }));
+
+        routes = await fetchRoutes();
+    }
 
     const consumers = await fetchConsumers();
     const consumersWithCredentialsAndAcls = await Promise.all(consumers.map(async consumer => {
@@ -74,10 +88,12 @@ export default async ({fetchApis, fetchPlugins, fetchGlobalPlugins, fetchConsume
     const certificates = await fetchCertificatesForVersion({ version, fetchCertificates });
 
     return {
+        services: servicesWithPlugins,
         apis: apisWithPlugins,
         consumers: consumersWithCredentialsAndAcls,
         plugins: globalPlugins,
         upstreams: upstreamsWithTargets,
+        routes,
         certificates,
         version,
     };

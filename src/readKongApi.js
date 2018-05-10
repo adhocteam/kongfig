@@ -10,6 +10,8 @@ export default async (adminApi) => {
             return getCurrentStateSelector({
                 _info: { version },
                 apis: parseApis(state.apis, version),
+                routes: parseRoutes(state.routes, version),
+                services: parseServices(state.services, version),
                 consumers: parseConsumers(state.consumers),
                 plugins: parseGlobalPlugins(state.plugins),
                 upstreams: semVer.gte(version, '0.10.0') ? parseUpstreams(state.upstreams) : undefined,
@@ -54,7 +56,7 @@ function parseCredential([credentialName, credentials]) {
             name: credentialName,
             attributes,
             _info: {id, consumer_id, created_at}
-        }
+        };
     });
 }
 
@@ -180,6 +182,49 @@ export const parseGlobalPlugin = ({
         }
     };
 };
+
+function parseRoutes(routes, version) {
+    if (semVer.gte(version, '0.13.0')) {
+        return routes.map(({ service, id, created_at, updated_at, ...rest }) => {
+            return { service: service.id, attributes: {...rest}, _info: { id, updated_at, created_at } };
+        });
+    }
+    return [];
+}
+
+function parseService({
+    name, plugins, host, connect_timeout, read_timeout,
+    port, path, write_timeout, id, created_at, updated_at,
+    protocol, retries }) {
+    return {
+        name,
+        attributes: {
+            host,
+            port,
+            protocol,
+            path,
+            retries,
+            connect_timeout,
+            read_timeout,
+            write_timeout,
+        },
+        _info: {
+            id,
+            created_at,
+            updated_at,
+        }
+    };
+}
+
+function parseServices(services, version) {
+    if (semVer.gte(version, '0.13.0')) {
+        return services.map((service) => {
+            const { name, ...rest } = parseService(service);
+            return { name, plugins: parseApiPlugins(service.plugins), ...rest };
+        });
+    }
+    return [];
+}
 
 function parseGlobalPlugins(plugins) {
     if (!Array.isArray(plugins)) {
