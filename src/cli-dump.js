@@ -16,6 +16,7 @@ program
     .option('--ignore-consumers', 'Ignore consumers in kong')
     .option('--header [value]', 'Custom headers to be added to all requests', (nextHeader, headers) => { headers.push(nextHeader); return headers }, [])
     .option('--credential-schema <value>', 'Add custom auth plugin in <name>:<key> format. Ex: custom_jwt:key. Repeat option for multiple custom plugins', repeatableOptionCallback, [])
+    .option('--socks <value>', 'Socks proxy to use to connect to Kong admin')
     .parse(process.argv);
 
 if (!program.host) {
@@ -32,17 +33,22 @@ try {
 
 let headers = program.header || [];
 
+if (program.socks) {
+    requester.setAgent(program.socks);
+}
+
 headers
     .map((h) => h.split(':'))
     .forEach(([name, value]) => requester.addHeader(name, value));
 
-readKongApi(adminApi({ host: program.host, https: program.https, ignoreConsumers: program.ignoreConsumers }))
+readKongApi(adminApi({ host: program.host, https: program.https, ignoreConsumers: program.ignoreConsumers, socks: program.socks }))
     .then(results => {
         return {host: program.host, https: program.https, headers, ...results};
     })
     .then(pretty(program.format))
     .then(config => {
         process.stdout.write(config + '\n');
+        process.exit(0);
     })
     .catch(error => {
         console.error(`${error}`.red, '\n', error.stack);

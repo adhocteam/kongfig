@@ -17,6 +17,7 @@ program
     .option('--ignore-consumers', 'Do not sync consumers')
     .option('--header [value]', 'Custom headers to be added to all requests', (nextHeader, headers) => { headers.push(nextHeader); return headers }, [])
     .option('--credential-schema <value>', 'Add custom auth plugin in <name>:<key> format. Ex: custom_jwt:key. Repeat option for multiple custom plugins', repeatableOptionCallback, [])
+    .option('--socks <value>', 'Socks proxy to use to connect to Kong admin')
     .parse(process.argv);
 
 if (!program.path) {
@@ -29,6 +30,10 @@ try{
 }catch(e){
     console.error(e.message.red);
     process.exit(1);
+}
+
+if (program.socks) {
+    requester.setAgent(program.socks);
 }
 
 console.log(`Loading config ${program.path}`);
