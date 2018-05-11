@@ -10,7 +10,6 @@ export default async (adminApi) => {
             return getCurrentStateSelector({
                 _info: { version },
                 apis: parseApis(state.apis, version),
-                routes: parseRoutes(state.routes, version),
                 services: parseServices(state.services, version),
                 consumers: parseConsumers(state.consumers),
                 plugins: parseGlobalPlugins(state.plugins),
@@ -183,13 +182,10 @@ export const parseGlobalPlugin = ({
     };
 };
 
-function parseRoutes(routes, version) {
-    if (semVer.gte(version, '0.13.0')) {
-        return routes.map(({ service, id, created_at, updated_at, ...rest }) => {
-            return { service: service.id, attributes: {...rest}, _info: { id, updated_at, created_at } };
-        });
-    }
-    return [];
+function parseRoutes(routes) {
+    return routes.map(({ id, created_at, updated_at, ...rest }) => {
+        return { id, attributes: {...rest}, _info: { id, updated_at, created_at } };
+    });
 }
 
 function parseService({
@@ -218,9 +214,9 @@ function parseService({
 
 function parseServices(services, version) {
     if (semVer.gte(version, '0.13.0')) {
-        return services.map((service) => {
+        return services.map(({ plugins, routes, ...service }) => {
             const { name, ...rest } = parseService(service);
-            return { name, plugins: parseApiPlugins(service.plugins), ...rest };
+            return { name, plugins: parseApiPlugins(plugins), routes: parseRoutes(routes), ...rest };
         });
     }
     return [];

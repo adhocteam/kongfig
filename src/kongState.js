@@ -25,7 +25,7 @@ const fetchCertificatesForVersion = async ({ version, fetchCertificates }) => {
     return await fetchCertificates();
 };
 
-export default async ({fetchApis, fetchPlugins, fetchGlobalPlugins, fetchConsumers, fetchConsumerCredentials, fetchConsumerAcls, fetchUpstreams, fetchTargets, fetchTargetsV11Active, fetchCertificates, fetchKongVersion, fetchServices, fetchRoutes, fetchServicePlugins}) => {
+export default async ({fetchApis, fetchPlugins, fetchGlobalPlugins, fetchConsumers, fetchConsumerCredentials, fetchConsumerAcls, fetchUpstreams, fetchTargets, fetchTargetsV11Active, fetchCertificates, fetchKongVersion, fetchServices, fetchServiceRoutes, fetchServicePlugins}) => {
     const version = await fetchKongVersion();
     const apis = await fetchApis();
     const apisWithPlugins = await Promise.all(apis.map(async item => {
@@ -34,18 +34,17 @@ export default async ({fetchApis, fetchPlugins, fetchGlobalPlugins, fetchConsume
         return {...item, plugins};
     }));
 
-    let servicesWithPlugins = [];
-    let routes = [];
+    let servicesWithPluginsAndRoutes = [];
 
     if (semVer.gte(version, '0.13.0')) {
         const services = await fetchServices();
-        servicesWithPlugins = await Promise.all(services.map(async item => {
+        servicesWithPluginsAndRoutes = await Promise.all(services.map(async item => {
             const plugins = await fetchServicePlugins(item.id);
+            const routes = await fetchServiceRoutes(item.name);
 
-            return {...item, plugins};
+            return {...item, plugins, routes};
         }));
 
-        routes = await fetchRoutes();
     }
 
     const consumers = await fetchConsumers();
@@ -88,12 +87,11 @@ export default async ({fetchApis, fetchPlugins, fetchGlobalPlugins, fetchConsume
     const certificates = await fetchCertificatesForVersion({ version, fetchCertificates });
 
     return {
-        services: servicesWithPlugins,
+        services: servicesWithPluginsAndRoutes,
         apis: apisWithPlugins,
         consumers: consumersWithCredentialsAndAcls,
         plugins: globalPlugins,
         upstreams: upstreamsWithTargets,
-        routes,
         certificates,
         version,
     };
