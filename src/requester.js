@@ -17,11 +17,6 @@ const get = (uri, agent = defaultAgent) => {
         }
     };
 
-    if (!defaultAgent) {
-        console.log(agent);
-        console.trace();
-    }
-
     if (defaultAgent) {
         options.agent = defaultAgent;
     }

@@ -12,12 +12,18 @@ import getCurrentStateSelector from './stateSelector';
 import diff from './diff';
 import {
     noop,
+    createService,
+    updateService,
+    removeService,
     createApi,
     removeApi,
     updateApi,
     addApiPlugin,
     removeApiPlugin,
     updateApiPlugin,
+    addServicePlugin,
+    removeServicePlugin,
+    updateServicePlugin,
     addGlobalPlugin,
     removeGlobalPlugin,
     updateGlobalPlugin,
@@ -98,6 +104,7 @@ export default async function execute(config, adminApi, logger = () => {}) {
         ...consumers(splitConsumersConfig.added),
         ...upstreams(config.upstreams),
         ...apis(config.apis),
+        ...services(config.services),
         ...globalPlugins(config.plugins),
         ...certificates(config.certificates),
         ...consumers(splitConsumersConfig.removed),
@@ -115,6 +122,14 @@ export default async function execute(config, adminApi, logger = () => {}) {
         .reduce((promise, action) => promise.then(_executeActionOnApi(action, adminApi, internalLogger.logger)), Promise.resolve(''));
 }
 
+export function services(services = []) {
+    return services.reduce((actions, service) => [...actions, _service(service), ..._serviceRoutes(service), ..._servicePlugins(service)], []);
+}
+
+export function routes(routes = []) {
+    return [];
+}
+
 export function apis(apis = []) {
     return apis.reduce((actions, api) => [...actions, _api(api), ..._apiPlugins(api)], []);
 }
@@ -123,8 +138,12 @@ export function globalPlugins(globalPlugins = []) {
     return globalPlugins.reduce((actions, plugin) => [...actions, _globalPlugin(plugin)], []);
 }
 
-export function plugins(apiName, plugins) {
+export function plugins(apiName, plugins, type) {
     return plugins.reduce((actions, plugin) => [...actions, _plugin(apiName, plugin)], []);
+}
+
+export function servicePlugins(serviceName, plugins, type) {
+    return plugins.reduce((actions, plugin) => [...actions, _servicePlugin(serviceName, plugin)], []);
 }
 
 export function consumers(consumers = []) {
@@ -202,7 +221,7 @@ function _executeActionOnApi(action, adminApi, logger) {
                     throw error;
                 }
             });
-        }
+    };
 }
 
 function _bindWorldState(adminApi) {
@@ -213,11 +232,26 @@ function _bindWorldState(adminApi) {
     }
 }
 
-function _createWorld({apis, consumers, plugins, upstreams, certificates, _info: { version }}) {
+function _createWorld({apis, consumers, plugins, upstreams, services, certificates, _info: { version }}) {
     const world = {
         getVersion: () => version,
 
         hasApi: apiName => Array.isArray(apis) && apis.some(api => api.name === apiName),
+        hasService: serviceName => Array.isArray(services) && services.some(service => service.name === serviceName),
+        getService: serviceName => {
+            const service = services.find(service => service.name === serviceName);
+
+            invariant(service, `Unable to find service ${serviceName}`);
+
+            return service;
+        },
+        getServiceId: serviceName => {
+            const id = world.getService(serviceName)._info.id;
+
+            invariant(id, `API ${serviceName} doesn't have an Id`);
+
+            return id;
+        },
         getApi: apiName => {
             const api = apis.find(api => api.name === apiName);
 
@@ -239,6 +273,20 @@ function _createWorld({apis, consumers, plugins, upstreams, certificates, _info:
 
             return plugin;
         },
+        getServicePlugin: (serviceName, pluginName, pluginConsumerID) => {
+            const plugin = world.getService(serviceName).plugins.find(plugin => plugin.name == pluginName && plugin._info.consumer_id == pluginConsumerID);
+
+            invariant(plugin, `Unable to find plugin ${pluginName}`);
+
+            return plugin;
+        },
+        getServicePluginId: (serviceName, pluginName, pluginConsumerID) => {
+            const pluginId = world.getPlugin(serviceName, pluginName, pluginConsumerID)._info.id;
+
+            invariant(pluginId, `Unable to find plugin id for ${serviceName} and ${pluginName}`);
+
+            return pluginId;
+        },
         getPlugin: (apiName, pluginName, pluginConsumerID) => {
             const plugin = world.getApi(apiName).plugins.find(plugin => plugin.name == pluginName && plugin._info.consumer_id == pluginConsumerID);
 
@@ -259,6 +307,9 @@ function _createWorld({apis, consumers, plugins, upstreams, certificates, _info:
             invariant(globalPluginId, `Unable to find global plugin id ${pluginName}`);
 
             return globalPluginId;
+        },
+        hasServicePlugin: (serviceName, pluginName, pluginConsumerID) => {
+            return Array.isArray(services) && services.some(service => service.name === serviceName && Array.isArray(service.plugins) && service.plugins.some(plugin => plugin.name == pluginName && plugin._info.consumer_id == pluginConsumerID));
         },
         hasPlugin: (apiName, pluginName, pluginConsumerID) => {
             return Array.isArray(apis) && apis.some(api => api.name === apiName && Array.isArray(api.plugins) && api.plugins.some(plugin => plugin.name == pluginName && plugin._info.consumer_id == pluginConsumerID));
@@ -348,6 +399,22 @@ function _createWorld({apis, consumers, plugins, upstreams, certificates, _info:
 
         isApiUpToDate: (api) => {
             return diff(api.attributes, world.getApi(api.name).attributes).length == 0;
+        },
+
+        isServiceUpToDate: (service) => {
+            return diff(service.attributes, world.getService(service.name).attributes).length == 0;
+        },
+
+        isServicePluginUpToDate: (serviceName, plugin, consumerID) => {
+            if (false == plugin.hasOwnProperty('attributes')) {
+                // of a plugin has no attributes, and its been added then it is up to date
+                return true;
+            }
+
+            let current = world.getPlugin(serviceName, plugin.name, consumerID);
+            let attributes = normalizeAttributes(plugin.attributes);
+
+            return isAttributesWithConfigUpToDate(attributes, current.attributes);
         },
 
         isApiPluginUpToDate: (apiName, plugin, consumerID) => {
@@ -478,7 +545,7 @@ function extractCredential(credentials, name, attributes) {
         .filter(c => c.name === name)
         .filter(c => c.attributes[idName] === attributes[idName]);
 
-    invariant(credential.length <= 1, `consumer shouldn't have multiple ${name} credentials with ${idName} = ${attributes[idName]}`)
+    invariant(credential.length <= 1, `consumer shouldn't have multiple ${name} credentials with ${idName} = ${attributes[idName]}`);
 
     return credential.length ? credential[0] : undefined;
 }
@@ -486,6 +553,27 @@ function extractCredential(credentials, name, attributes) {
 function extractAclId(acls, groupName) {
     const idName = getAclSchema().id;
     return acls.find(x => x[idName] == groupName);
+}
+
+function _service(service) {
+    validateEnsure(service.ensure);
+    validateServiceRequiredAttributes(service);
+
+    return (world) => {
+        if (service.ensure == 'removed') {
+            return world.hasService(service.name) ? removeService(service.name) : noop({ type: 'noop-service', service });
+        }
+
+        if (world.hasService(service.name)) {
+            if (world.isServiceUpToDate(service)) {
+                return noop({ type: 'noop-service', service });
+            }
+
+            return updateService(service.name, service.attributes);
+        }
+
+        return createService(service.name, service.attributes);
+    };
 }
 
 function _api(api) {
@@ -513,6 +601,14 @@ function _apiPlugins(api) {
     return api.plugins && api.ensure != 'removed' ? plugins(api.name, api.plugins) : [];
 }
 
+function _serviceRoutes(service) {
+    return service.routes && service.ensure != 'remove' ? routes(service.name, service.plugins) : [];
+}
+
+function _servicePlugins(service) {
+    return service.plugins && service.ensure != 'remove' ? servicePlugins(service.name, service.plugins) : [];
+}
+
 function validateEnsure(ensure) {
     if (!ensure) {
         return;
@@ -520,6 +616,22 @@ function validateEnsure(ensure) {
 
     if (['removed', 'present'].indexOf(ensure) === -1) {
         throw new Error(`Invalid ensure "${ensure}"`);
+    }
+}
+
+function validateServiceRequiredAttributes(service) {
+    if (!service.hasOwnProperty('name')) {
+        throw Error(`"Service name is required: ${JSON.stringify(service, null, '  ')}`);
+    }
+
+    if (!service.hasOwnProperty('attributes')) {
+        throw Error(`"${service.name}" api has to declare "host", "protocol", and "port" attributes`);
+    }
+
+    if (!service.attributes.hasOwnProperty('port') ||
+        !service.attributes.hasOwnProperty('host') ||
+        !service.attributes.hasOwnProperty('protocol')) {
+        throw Error(`"${service.name}" api has to declare "host", "protocol", and "port" attributes`);
     }
 }
 
@@ -562,7 +674,7 @@ const swapConsumerReference = (world, plugin) => {
     return newPluginDef;
 }
 
-function _plugin(apiName, plugin) {
+function _plugin(apiName, plugin, type) {
     validateEnsure(plugin.ensure);
 
     return world => {
@@ -586,6 +698,33 @@ function _plugin(apiName, plugin) {
         }
 
         return addApiPlugin(world.getApiId(apiName), plugin.name, finalPlugin.attributes);
+    }
+}
+
+function _servicePlugin(serviceName, plugin, type) {
+    validateEnsure(plugin.ensure);
+
+    return world => {
+        const finalPlugin = swapConsumerReference(world, plugin);
+        const consumerID = finalPlugin.attributes && finalPlugin.attributes.consumer_id;
+
+        if (plugin.ensure == 'removed') {
+            if (world.hasPlugin(serviceName, plugin.name, consumerID)) {
+                return removeServicePlugin(world.getServiceId(serviceName), world.getServicePluginId(serviceName, plugin.name, consumerID));
+            }
+
+            return noop({ type: 'noop-plugin', plugin });
+        }
+
+        if (world.hasServicePlugin(serviceName, plugin.name, consumerID)) {
+            if (world.isServicePluginUpToDate(serviceName, plugin, consumerID)) {
+                return noop({ type: 'noop-plugin', plugin });
+            }
+
+            return updateServicePlugin(world.getServiceId(serviceName), world.getServicePluginId(serviceName, plugin.name, consumerID), finalPlugin.attributes);
+        }
+
+        return addServicePlugin(world.getServiceId(serviceName), plugin.name, finalPlugin.attributes);
     }
 }
 

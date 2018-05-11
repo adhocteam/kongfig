@@ -3,6 +3,7 @@ import plugins from './plugins';
 import consumers from './consumers';
 import upstreams from './upstreams';
 import certificates from './certificates';
+import services from './services';
 
 const combine = reducers => (state = {}, log) => {
     return Object.keys(reducers).reduce((nextState, key) => {
@@ -29,4 +30,5 @@ export default combine({
     consumers,
     upstreams,
     certificates,
+    services
 });

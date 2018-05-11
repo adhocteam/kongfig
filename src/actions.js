@@ -11,6 +11,32 @@ export function noop({ type, ...rest} = {}) {
     };
 }
 
+export function createService(name, params) {
+    return {
+        type: 'create-service',
+        endpoint: {name: 'services'},
+        method: 'POST',
+        body: assign({}, params, {name})
+    };
+};
+
+export function removeService(name) {
+    return {
+        type: 'remove-service',
+        endpoint: {name: 'service', params: {name}},
+        method: 'DELETE',
+    };
+}
+
+export function updateService(name, params) {
+    return {
+        type: 'update-service',
+        endpoint: {name: 'service', params: {name}},
+        method: 'PATCH',
+        body: params
+    };
+}
+
 export function createApi(name, params) {
     return {
         type: 'create-api',
