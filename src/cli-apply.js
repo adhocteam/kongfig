@@ -10,11 +10,11 @@ import {addSchemasFromOptions, addSchemasFromConfig} from './consumerCredentials
 
 program
     .version(require("../package.json").version)
-    .option('--output <value', 'Path to result output file')
     .option('--path <value>', 'Path to the configuration file')
     .option('--host <value>', 'Kong admin host (default: localhost:8001)')
     .option('--https', 'Use https for admin API requests')
     .option('--no-cache', 'Do not cache kong state in memory')
+    .option('--no-remove-routes', 'Do not clean up old routes')
     .option('--ignore-consumers', 'Do not sync consumers')
     .option('--header [value]', 'Custom headers to be added to all requests', (nextHeader, headers) => { headers.push(nextHeader); return headers }, [])
     .option('--credential-schema <value>', 'Add custom auth plugin in <name>:<key> format. Ex: custom_jwt:key. Repeat option for multiple custom plugins', repeatableOptionCallback, [])
@@ -43,7 +43,7 @@ let config = configLoader(program.path);
 let host = program.host || config.host || 'localhost:8001';
 let https = program.https || config.https || false;
 let ignoreConsumers = program.ignoreConsumers || !config.consumers || config.consumers.length === 0 || false;
-let cache = program.cache;
+let { cache, removeRoutes } = program;
 
 config.headers = config.headers || [];
 
@@ -74,8 +74,8 @@ else {
 
 console.log(`Apply config to ${host}`.green);
 
-execute(config, adminApi({host, https, ignoreConsumers, cache}), screenLogger)
-  .catch(error => {
-      console.error(`${error}`.red, '\n', error.stack);
-      process.exit(1);
-  });
+execute(config, adminApi({host, https, ignoreConsumers, cache}), screenLogger, removeRoutes)
+    .catch(error => {
+        console.error(`${error}`.red, '\n', error.stack);
+        process.exit(1);
+    });

@@ -99,7 +99,7 @@ const splitConsumersByRemoved = consumers => (consumers || []).reduce((results, 
     return { ...results, added: [...results.added, consumer] };
 }, { removed: [], added: [] });
 
-export default async function execute(config, adminApi, logger = () => {}) {
+export default async function execute(config, adminApi, logger = () => {}, removeRoutes = true) {
     const internalLogger = logFanout();
     const splitConsumersConfig = splitConsumersByRemoved(config.consumers);
 
@@ -107,7 +107,7 @@ export default async function execute(config, adminApi, logger = () => {}) {
         ...consumers(splitConsumersConfig.added),
         ...upstreams(config.upstreams),
         ...apis(config.apis),
-        ...services(config.services),
+        ...services(config.services, removeRoutes),
         ...globalPlugins(config.plugins),
         ...certificates(config.certificates),
         ...consumers(splitConsumersConfig.removed),
@@ -125,8 +125,8 @@ export default async function execute(config, adminApi, logger = () => {}) {
         .reduce((promise, action) => promise.then(_executeActionOnApi(action, adminApi, internalLogger.logger)), Promise.resolve(''));
 }
 
-export function services(services = []) {
-    return services.reduce((actions, service) => [...actions, _service(service), ..._serviceRoutes(service), ..._servicePlugins(service)], []);
+export function services(services = [], removeRoutes) {
+    return services.reduce((actions, service) => [...actions, _service(service), removeOldRoutes(service, removeRoutes), ..._serviceRoutes(service), ..._servicePlugins(service)], []);
 }
 
 export function routes(serviceName, routes = []) {
@@ -191,39 +191,46 @@ function parseResponseContent(content) {
 
 function _executeActionOnApi(action, adminApi, logger) {
     return async () => {
-        const params = await action();
+        const _ps = await action();
 
-        if (params.noop) {
-            logger({ type: 'noop', params });
+        const ps = (Array.isArray(_ps)) ? _ps : [_ps];
 
-            return Promise.resolve('No-op');
-        }
+        return ps.reduce((promise, params) => {
 
-        logger({ type: 'request', params, uri: adminApi.router(params.endpoint) });
+            if (params.noop) {
+                logger({ type: 'noop', params });
 
-        return adminApi
-            .requestEndpoint(params.endpoint, params)
-            .then(response => Promise.all([
-                {
-                    type: 'response',
-                    ok: response.ok,
-                    uri: adminApi.router(params.endpoint),
-                    status: response.status,
-                    statusText: response.statusText,
-                    params,
-                },
-                response.text()
-            ]))
-            .then(([response, content]) => {
-                logger({ ...response, content: parseResponseContent(content) });
+                return Promise.resolve('No-op');
+            }
 
-                if (!response.ok) {
-                    const error = new Error(`${response.statusText}\n${content}`);
-                    error.response = response;
+            logger({ type: 'request', params, uri: adminApi.router(params.endpoint) });
 
-                    throw error;
-                }
+            return promise.then(() => {
+                return adminApi
+                    .requestEndpoint(params.endpoint, params)
+                    .then(response => Promise.all([
+                        {
+                            type: 'response',
+                            ok: response.ok,
+                            uri: adminApi.router(params.endpoint),
+                            status: response.status,
+                            statusText: response.statusText,
+                            params,
+                        },
+                        response.text()
+                    ]))
+                    .then(([response, content]) => {
+                        logger({ ...response, content: parseResponseContent(content) });
+
+                        if (!response.ok) {
+                            const error = new Error(`${response.statusText}\n${content}`);
+                            error.response = response;
+
+                            throw error;
+                        }
+                    });
             });
+        }, Promise.resolve(''));
     };
 }
 
@@ -232,7 +239,7 @@ function _bindWorldState(adminApi) {
         const state = await readKongApi(adminApi);
 
         return f(_createWorld(state));
-    }
+    };
 }
 
 function _createWorld({apis, consumers, plugins, upstreams, services, certificates, _info: { version }}) {
@@ -305,7 +312,7 @@ function _createWorld({apis, consumers, plugins, upstreams, services, certificat
             return pluginId;
         },
         getGlobalPluginId: (pluginName, pluginConsumerID) => {
-            const globalPluginId = world.getGlobalPlugin(pluginName, pluginConsumerID)._info.id
+            const globalPluginId = world.getGlobalPlugin(pluginName, pluginConsumerID)._info.id;
 
             invariant(globalPluginId, `Unable to find global plugin id ${pluginName}`);
 
@@ -571,6 +578,23 @@ function extractCredential(credentials, name, attributes) {
 function extractAclId(acls, groupName) {
     const idName = getAclSchema().id;
     return acls.find(x => x[idName] == groupName);
+}
+
+function removeOldRoutes(service, removeRoutes) {
+    return (world) => {
+        if (!removeRoutes) {
+            return noop({ type: 'noop-skip-remove-routes', service });
+        }
+
+        if (world.hasService) {
+            const oldService = world.getService(service.name);
+            return oldService.routes
+                .filter((route) => !(service.routes.find((r) => r.id === route.id)))
+                .map((route) => removeServiceRoute(oldService.name, route));
+        }
+
+        return noop({ type: 'noop-clear-service-routes', service });
+    };
 }
 
 function _service(service) {

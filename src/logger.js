@@ -31,6 +31,8 @@ export const screenLogger = createLogHandler({
         'noop-certificate': ({ identityClue }) => console.log(`certificate ${identityClue}... ${'is up to date'.bold.green}`),
         'noop-certificate-sni': ({ sni }) => console.log(`certificate sni ${sni.name} ${'is up to date'.bold.green}`),
         'noop-certificate-sni-removed': ({ sni }) => console.log(`certificate sni ${sni.name} ${'is NOT present'.bold.green}`),
+        'noop-clear-service-routes': ({ service: { name } }) => console.log(`service ${name} has no old routes to clear`),
+        'noop-skip-remove-routes': ({ service: { name } }) => console.log('Skipping removing old routes due to cli flag'),
 
         unknown: action => console.log('unknown action', action),
     })(message.params),
