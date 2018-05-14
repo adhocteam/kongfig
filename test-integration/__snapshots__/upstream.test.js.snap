@@ -167,6 +167,7 @@ Array [
 
 exports[`Upstream Targets should add mockbin upstream with target 2`] = `
 "apis: []
+services: []
 consumers: []
 plugins: []
 upstreams:
@@ -423,6 +424,7 @@ Array [
 
 exports[`Upstream Targets should remove target from mockbin upstream 2`] = `
 "apis: []
+services: []
 consumers: []
 plugins: []
 upstreams:
@@ -676,6 +678,7 @@ Array [
 
 exports[`Upstream Targets should update mockbin upstream target 2`] = `
 "apis: []
+services: []
 consumers: []
 plugins: []
 upstreams:
@@ -809,6 +812,7 @@ Array [
 
 exports[`Upstream should add the upstream 2`] = `
 "apis: []
+services: []
 consumers: []
 plugins: []
 upstreams:
@@ -957,6 +961,7 @@ Array [
 
 exports[`Upstream should not update if already up to date 2`] = `
 "apis: []
+services: []
 consumers: []
 plugins: []
 upstreams:
@@ -993,6 +998,7 @@ Array [
 
 exports[`Upstream should remove the upstream 2`] = `
 "apis: []
+services: []
 consumers: []
 plugins: []
 upstreams: []
@@ -1235,6 +1241,7 @@ Array [
 
 exports[`Upstream should update the upstream 2`] = `
 "apis: []
+services: []
 consumers: []
 plugins: []
 upstreams:

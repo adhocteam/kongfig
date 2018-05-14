@@ -161,6 +161,7 @@ Array [
 
 exports[`should apply certificates.example.yml 2`] = `
 "apis: []
+services: []
 consumers: []
 plugins: []
 upstreams: []
@@ -410,6 +411,7 @@ Array [
 
 exports[`should apply consumer.example.yml 2`] = `
 "apis: []
+services: []
 consumers:
   - username: iphone-app
     acls:
@@ -514,6 +516,7 @@ Array [
 
 exports[`should apply global-plugin.example.yml 2`] = `
 "apis: []
+services: []
 consumers: []
 plugins:
   - name: cors
@@ -850,6 +853,7 @@ exports[`should apply key-auth.example.yml 2`] = `
       upstream_send_timeout: 60000
       https_only: false
       http_if_terminated: false
+services: []
 consumers:
   - username: iphone-app
     acls: []
@@ -1236,6 +1240,7 @@ exports[`should apply key-auth-anonymous.example.yml 2`] = `
       upstream_send_timeout: 60000
       https_only: false
       http_if_terminated: false
+services: []
 consumers:
   - username: anonymous-user
     acls: []
@@ -1750,6 +1755,7 @@ exports[`should apply plugin-per-consumer.example.yml 2`] = `
       upstream_send_timeout: 60000
       https_only: false
       http_if_terminated: false
+services: []
 consumers:
   - username: user-john
     acls: []
@@ -1887,6 +1893,7 @@ exports[`should apply simple-api.example.yml 2`] = `
       upstream_send_timeout: 60000
       https_only: false
       http_if_terminated: false
+services: []
 consumers: []
 plugins: []
 upstreams: []
@@ -2167,6 +2174,7 @@ Array [
 
 exports[`should apply upstreams-and-targets.example.yml 2`] = `
 "apis: []
+services: []
 consumers: []
 plugins: []
 upstreams:

@@ -195,6 +195,7 @@ exports[`per user api plugins by username should add an api rate limiting plugin
       upstream_send_timeout: 60000
       https_only: false
       http_if_terminated: false
+services: []
 consumers:
   - username: user-limited
     acls: []
@@ -314,6 +315,7 @@ Array [
 
 exports[`per user global plugins by username should add global rate limiting plugin for a user 2`] = `
 "apis: []
+services: []
 consumers:
   - username: user-limited
     acls: []
@@ -544,6 +546,7 @@ Array [
 
 exports[`per user global plugins by username should add global rate limiting plugin for multiple users 2`] = `
 "apis: []
+services: []
 consumers:
   - username: user-limited
     acls: []
@@ -885,6 +888,7 @@ Array [
 
 exports[`per user global plugins by username should remove global rate limiting plugin for the user 2`] = `
 "apis: []
+services: []
 consumers:
   - username: user-limited-another
     acls: []
@@ -1217,6 +1221,7 @@ Array [
 
 exports[`per user global plugins by username should update global rate limiting plugin for the user 2`] = `
 "apis: []
+services: []
 consumers:
   - username: user-limited
     acls: []

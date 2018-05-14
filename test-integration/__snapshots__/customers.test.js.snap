@@ -90,6 +90,7 @@ Array [
 
 exports[`Integration consumers acls should add the acl 2`] = `
 "apis: []
+services: []
 consumers:
   - username: iphone-app
     acls:
@@ -246,6 +247,7 @@ Array [
 
 exports[`Integration consumers acls should remove the acl 2`] = `
 "apis: []
+services: []
 consumers:
   - username: iphone-app
     acls: []
@@ -348,6 +350,7 @@ Array [
 
 exports[`Integration consumers credentials should add the credential 2`] = `
 "apis: []
+services: []
 consumers:
   - username: iphone-app
     acls: []
@@ -513,6 +516,7 @@ Array [
 
 exports[`Integration consumers credentials should remove the credential 2`] = `
 "apis: []
+services: []
 consumers:
   - username: iphone-app
     acls: []
@@ -693,6 +697,7 @@ Array [
 
 exports[`Integration consumers credentials should update the credential 2`] = `
 "apis: []
+services: []
 consumers:
   - username: iphone-app
     acls: []
@@ -754,6 +759,7 @@ Array [
 
 exports[`Integration consumers should add the consumer 2`] = `
 "apis: []
+services: []
 consumers:
   - username: iphone-app
     acls: []
@@ -847,6 +853,7 @@ Array [
 
 exports[`Integration consumers should remove the consumer 2`] = `
 "apis: []
+services: []
 consumers: []
 plugins: []
 upstreams: []
@@ -950,6 +957,7 @@ Array [
 
 exports[`Integration consumers should update the consumer 2`] = `
 "apis: []
+services: []
 consumers:
   - username: iphone-app
     custom_id: foobar123
