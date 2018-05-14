@@ -182,10 +182,12 @@ export const parseGlobalPlugin = ({
     };
 };
 
+function parseRoute({ id, created_at, updated_at, ...rest }) {
+    return { id, attributes: {...rest}, _info: { id, updated_at, created_at } };
+}
+
 function parseRoutes(routes) {
-    return routes.map(({ id, created_at, updated_at, ...rest }) => {
-        return { id, attributes: {...rest}, _info: { id, updated_at, created_at } };
-    });
+    return routes.map(parseRoute);
 }
 
 function parseService({

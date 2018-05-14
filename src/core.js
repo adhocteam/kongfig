@@ -24,6 +24,9 @@ import {
     addServicePlugin,
     removeServicePlugin,
     updateServicePlugin,
+    addServiceRoute,
+    removeServiceRoute,
+    updateServiceRoute,
     addGlobalPlugin,
     removeGlobalPlugin,
     updateGlobalPlugin,
@@ -44,7 +47,7 @@ import {
     addUpstreamTarget,
     removeUpstreamTarget,
     updateUpstreamTarget
-} from './actions/upstreams'
+} from './actions/upstreams';
 
 import {
     addCertificate,
@@ -126,8 +129,8 @@ export function services(services = []) {
     return services.reduce((actions, service) => [...actions, _service(service), ..._serviceRoutes(service), ..._servicePlugins(service)], []);
 }
 
-export function routes(routes = []) {
-    return [];
+export function routes(serviceName, routes = []) {
+    return routes.reduce((actions, route) => [...actions, _route(serviceName, route)], []);
 }
 
 export function apis(apis = []) {
@@ -138,7 +141,7 @@ export function globalPlugins(globalPlugins = []) {
     return globalPlugins.reduce((actions, plugin) => [...actions, _globalPlugin(plugin)], []);
 }
 
-export function plugins(apiName, plugins, type) {
+export function plugins(apiName, plugins) {
     return plugins.reduce((actions, plugin) => [...actions, _plugin(apiName, plugin)], []);
 }
 
@@ -308,6 +311,9 @@ function _createWorld({apis, consumers, plugins, upstreams, services, certificat
 
             return globalPluginId;
         },
+        hasRoute: (serviceName, { id }) => {
+            return Array.isArray(services) && services.some(service => service.name === serviceName && Array.isArray(service.routes) && service.routes.some(routes => routes.id == id ));
+        },
         hasServicePlugin: (serviceName, pluginName, pluginConsumerID) => {
             return Array.isArray(services) && services.some(service => service.name === serviceName && Array.isArray(service.plugins) && service.plugins.some(plugin => plugin.name == pluginName && plugin._info.consumer_id == pluginConsumerID));
         },
@@ -391,6 +397,14 @@ function _createWorld({apis, consumers, plugins, upstreams, services, certificat
             return aclId;
         },
 
+        getServiceRoute: (serviceName, { id }) => {
+            const route = world.getService(serviceName).routes.find(route => route.id === id);
+
+            invariant(route, `Unable to find plugin ${id}`);
+
+            return route;
+        },
+
         isConsumerUpToDate: (username, custom_id) => {
             const consumer = world.getConsumer(username);
 
@@ -415,6 +429,10 @@ function _createWorld({apis, consumers, plugins, upstreams, services, certificat
             let attributes = normalizeAttributes(plugin.attributes);
 
             return isAttributesWithConfigUpToDate(attributes, current.attributes);
+        },
+
+        isRouteUpToDate: (serviceName, route) => {
+            return diff(route.attributes, world.getServiceRoute(serviceName, route).attributes).length == 0;
         },
 
         isApiPluginUpToDate: (apiName, plugin, consumerID) => {
@@ -602,7 +620,7 @@ function _apiPlugins(api) {
 }
 
 function _serviceRoutes(service) {
-    return service.routes && service.ensure != 'remove' ? routes(service.name, service.plugins) : [];
+    return service.routes && service.ensure != 'remove' ? routes(service.name, service.routes) : [];
 }
 
 function _servicePlugins(service) {
@@ -672,9 +690,33 @@ const swapConsumerReference = (world, plugin) => {
     }
 
     return newPluginDef;
+};
+
+function _route(serviceName, route) {
+    validateEnsure(route.ensure);
+
+    return world => {
+        if (route.ensure == 'removed') {
+            if (world.hasRoute(servcieName, route)) {
+                return removeServiceRoute(world.getServiceId(serviceName), route);
+            }
+
+            return noop({ type: 'noop-route', route });
+        }
+
+        if (world.hasRoute(serviceName, route)) {
+            if (world.isRouteUpToDate(serviceName, route)) {
+                return noop({ type: 'noop-route', route });
+            }
+
+            return updateServiceRoute(world.getServiceId(serviceName), route);
+        }
+
+        return addServiceRoute(world.getServiceId(serviceName), route);
+    };
 }
 
-function _plugin(apiName, plugin, type) {
+function _plugin(apiName, plugin) {
     validateEnsure(plugin.ensure);
 
     return world => {
@@ -698,10 +740,10 @@ function _plugin(apiName, plugin, type) {
         }
 
         return addApiPlugin(world.getApiId(apiName), plugin.name, finalPlugin.attributes);
-    }
+    };
 }
 
-function _servicePlugin(serviceName, plugin, type) {
+function _servicePlugin(serviceName, plugin) {
     validateEnsure(plugin.ensure);
 
     return world => {
@@ -725,7 +767,7 @@ function _servicePlugin(serviceName, plugin, type) {
         }
 
         return addServicePlugin(world.getServiceId(serviceName), plugin.name, finalPlugin.attributes);
-    }
+    };
 }
 
 function _globalPlugin(plugin) {

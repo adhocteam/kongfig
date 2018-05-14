@@ -10,6 +10,7 @@ import {addSchemasFromOptions, addSchemasFromConfig} from './consumerCredentials
 
 program
     .version(require("../package.json").version)
+    .option('--output <value', 'Path to result output file')
     .option('--path <value>', 'Path to the configuration file')
     .option('--host <value>', 'Kong admin host (default: localhost:8001)')
     .option('--https', 'Use https for admin API requests')

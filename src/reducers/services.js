@@ -17,13 +17,31 @@ const plugins = (state, log) => {
     }
 };
 
+const routes = (state, log) => {
+    const { params: { type, endpoint: { params, body } }, content } = log;
+
+    switch (type) {
+    case 'add-service-route': return [ ...state, parseRoute(content) ];
+    case 'update-service-route': return state.map(state => {
+        if (state._info.id !== content.id) {
+            return state;
+        }
+
+        return parseRoute(content);
+    });
+    case 'remove-service-route': return state.filter(route => route.id !== params.routeId);
+    default: return state;
+    }
+};
+
 const service = (state, log) => {
     const { params: { type, endpoint: { params, body } }, content } = log;
 
     switch (type) {
     case 'create-service': return {
         ...parseService(content),
-        plugins: []
+        plugins: [],
+        routes: []
     };
     case 'update-service':
         if (state._info.id !== content.id) {
@@ -34,10 +52,23 @@ const service = (state, log) => {
             ...state,
             ...parseService(content)
         };
+
+    case 'add-service-route':
+    case 'update-service-route':
+    case 'remove-service-route':
+        if (state._info.id !== params.serviceId) {
+            return state;
+        }
+
+        return {
+            ...state,
+            routes: routes(state.routes, log)
+        };
+
     case 'add-service-plugin':
     case 'update-service-plugin':
     case 'remove-service-plugin':
-        if (state._info.id !== params.apiId) {
+        if (state._info.id !== params.serviceId) {
             return state;
         }
 
@@ -62,6 +93,9 @@ export default (state = [], log) => {
     case 'remove-service': return state.filter(service => service.name !== params.name);
 
     case 'update-service':
+    case 'add-service-route':
+    case 'update-service-route':
+    case 'remove-service-route':
     case 'add-service-plugin':
     case 'update-service-plugin':
     case 'remove-service-plugin': return state.map(state => service(state, log));
