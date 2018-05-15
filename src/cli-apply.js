@@ -76,6 +76,9 @@ else {
 console.log(`Apply config to ${host}`.green);
 
 execute(config, adminApi({host, https, ignoreConsumers, cache}), screenLogger, removeRoutes, dryRun)
+    .then (() => {
+        process.exit(0);
+    })
     .catch(error => {
         console.error(`${error}`.red, '\n', error.stack);
         process.exit(1);
