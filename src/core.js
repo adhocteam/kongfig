@@ -99,7 +99,7 @@ const splitConsumersByRemoved = consumers => (consumers || []).reduce((results, 
     return { ...results, added: [...results.added, consumer] };
 }, { removed: [], added: [] });
 
-export default async function execute(config, adminApi, logger = () => {}, removeRoutes = true) {
+export default async function execute(config, adminApi, logger = () => {}, removeRoutes = true, dryRun = false) {
     const internalLogger = logFanout();
     const splitConsumersConfig = splitConsumersByRemoved(config.consumers);
 
@@ -122,7 +122,7 @@ export default async function execute(config, adminApi, logger = () => {}, remov
 
     return actions
         .map(await selectWorldStateBind(adminApi, internalLogger))
-        .reduce((promise, action) => promise.then(_executeActionOnApi(action, adminApi, internalLogger.logger)), Promise.resolve(''));
+        .reduce((promise, action) => promise.then(_executeActionOnApi(action, adminApi, internalLogger.logger, dryRun)), Promise.resolve(''));
 }
 
 export function services(services = [], removeRoutes) {
@@ -189,7 +189,7 @@ function parseResponseContent(content) {
     return content;
 }
 
-function _executeActionOnApi(action, adminApi, logger) {
+function _executeActionOnApi(action, adminApi, logger, dry = false) {
     return async () => {
         const _ps = await action();
 
@@ -206,30 +206,34 @@ function _executeActionOnApi(action, adminApi, logger) {
             logger({ type: 'request', params, uri: adminApi.router(params.endpoint) });
 
             return promise.then(() => {
-                return adminApi
-                    .requestEndpoint(params.endpoint, params)
-                    .then(response => Promise.all([
-                        {
-                            type: 'response',
-                            ok: response.ok,
-                            uri: adminApi.router(params.endpoint),
-                            status: response.status,
-                            statusText: response.statusText,
-                            params,
-                        },
-                        response.text()
-                    ]))
-                    .then(([response, content]) => {
-                        logger({ ...response, content: parseResponseContent(content) });
+                if (dry) {
+                    return Promise.resolve('');
+                } else {
+                    return adminApi
+                        .requestEndpoint(params.endpoint, params)
+                        .then(response => Promise.all([
+                            {
+                                type: 'response',
+                                ok: response.ok,
+                                uri: adminApi.router(params.endpoint),
+                                status: response.status,
+                                statusText: response.statusText,
+                                params,
+                            },
+                            response.text()
+                        ]))
+                        .then(([response, content]) => {
+                            logger({ ...response, content: parseResponseContent(content) });
 
-                        if (!response.ok) {
-                            const error = new Error(`${response.statusText}\n${content}`);
-                            error.response = response;
+                            if (!response.ok) {
+                                const error = new Error(`${response.statusText}\n${content}`);
+                                error.response = response;
 
-                            throw error;
-                        }
-                    });
-            });
+                                throw error;
+                            }
+                        });
+                }
+             });
         }, Promise.resolve(''));
     };
 }

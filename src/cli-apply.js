@@ -16,6 +16,7 @@ program
     .option('--no-cache', 'Do not cache kong state in memory')
     .option('--no-remove-routes', 'Do not clean up old routes')
     .option('--ignore-consumers', 'Do not sync consumers')
+    .option('--dry-run', 'Print requests but do not send them')
     .option('--header [value]', 'Custom headers to be added to all requests', (nextHeader, headers) => { headers.push(nextHeader); return headers }, [])
     .option('--credential-schema <value>', 'Add custom auth plugin in <name>:<key> format. Ex: custom_jwt:key. Repeat option for multiple custom plugins', repeatableOptionCallback, [])
     .option('--socks <value>', 'Socks proxy to use to connect to Kong admin')
@@ -43,7 +44,7 @@ let config = configLoader(program.path);
 let host = program.host || config.host || 'localhost:8001';
 let https = program.https || config.https || false;
 let ignoreConsumers = program.ignoreConsumers || !config.consumers || config.consumers.length === 0 || false;
-let { cache, removeRoutes } = program;
+let { cache, removeRoutes, dryRun } = program;
 
 config.headers = config.headers || [];
 
@@ -74,7 +75,7 @@ else {
 
 console.log(`Apply config to ${host}`.green);
 
-execute(config, adminApi({host, https, ignoreConsumers, cache}), screenLogger, removeRoutes)
+execute(config, adminApi({host, https, ignoreConsumers, cache}), screenLogger, removeRoutes, dryRun)
     .catch(error => {
         console.error(`${error}`.red, '\n', error.stack);
         process.exit(1);

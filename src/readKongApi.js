@@ -181,7 +181,7 @@ export const parseGlobalPlugin = ({
         }
     };
 };
-"
+
 function parseRoute({ id, created_at, updated_at, service, ...rest }) {
     return { id, attributes: {...rest}, _info: { id, updated_at, created_at } };
 }
