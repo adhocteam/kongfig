@@ -1,6 +1,6 @@
 {
   "name": "@edpaget/kongfig",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "description": "A tool for Kong to allow declarative configuration.",
   "repository": "https://github.com/mybuilder/kongfig",
   "bin": {
