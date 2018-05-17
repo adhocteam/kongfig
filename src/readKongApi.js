@@ -160,34 +160,15 @@ function parseApiPlugins(plugins) {
     return plugins.map(parsePlugin);
 }
 
-export const parseGlobalPlugin = ({
-    name,
-    enabled,
-    config,
-    id, api_id, consumer_id, created_at
-}) => {
-    return {
-        name,
-        attributes: {
-            enabled,
-            consumer_id,
-            config: stripConfig(config)
-        },
-        _info: {
-            id,
-            api_id,
-            consumer_id,
-            created_at
-        }
-    };
-};
-
 function parseRoute({ id, created_at, updated_at, service, ...rest }) {
     return { id, attributes: {...rest}, _info: { id, updated_at, created_at } };
 }
 
 function parseRoutes(routes) {
-    return routes.map(parseRoute);
+    return routes.map(({ plugins, ...route }) => {
+        const { id, ...rest } = parseRoute(route);
+        return { id, plugins: parseApiPlugins(plugins), ...rest };
+    });
 }
 
 function parseService({
@@ -223,6 +204,28 @@ function parseServices(services, version) {
     }
     return [];
 }
+
+export const parseGlobalPlugin = ({
+    name,
+    enabled,
+    config,
+    id, api_id, consumer_id, created_at
+}) => {
+    return {
+        name,
+        attributes: {
+            enabled,
+            consumer_id,
+            config: stripConfig(config)
+        },
+        _info: {
+            id,
+            api_id,
+            consumer_id,
+            created_at
+        }
+    };
+};
 
 function parseGlobalPlugins(plugins) {
     if (!Array.isArray(plugins)) {

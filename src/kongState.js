@@ -1,5 +1,5 @@
 import semVer from 'semver';
-import {getSupportedCredentials} from './consumerCredentials'
+import {getSupportedCredentials} from './consumerCredentials';
 
 const fetchUpstreamsWithTargets = async ({ version, fetchUpstreams, fetchTargets }) => {
     if (semVer.lte(version, '0.10.0')) {
@@ -25,11 +25,11 @@ const fetchCertificatesForVersion = async ({ version, fetchCertificates }) => {
     return await fetchCertificates();
 };
 
-export default async ({fetchApis, fetchPlugins, fetchGlobalPlugins, fetchConsumers, fetchConsumerCredentials, fetchConsumerAcls, fetchUpstreams, fetchTargets, fetchTargetsV11Active, fetchCertificates, fetchKongVersion, fetchServices, fetchServiceRoutes, fetchServicePlugins}) => {
-    const version = await fetchKongVersion();
-    const apis = await fetchApis();
+export default async (adminApi) => {
+    const version = await adminApi.fetchKongVersion();
+    const apis = await adminApi.fetchApis();
     const apisWithPlugins = await Promise.all(apis.map(async item => {
-        const plugins =  await fetchPlugins(item.id);
+        const plugins =  await adminApi.fetchPlugins(item.id);
 
         return {...item, plugins};
     }));
@@ -37,17 +37,22 @@ export default async ({fetchApis, fetchPlugins, fetchGlobalPlugins, fetchConsume
     let servicesWithPluginsAndRoutes = [];
 
     if (semVer.gte(version, '0.13.0')) {
-        const services = await fetchServices();
+        const services = await adminApi.fetchServices();
         servicesWithPluginsAndRoutes = await Promise.all(services.map(async item => {
-            const plugins = await fetchServicePlugins(item.id);
-            const routes = await fetchServiceRoutes(item.name);
+            const plugins = await adminApi.fetchServicePlugins(item.id);
+            const routes = await adminApi.fetchServiceRoutes(item.name);
+            const routesWithPlugins = await Promise.all(routes.map(async route => {
+                const routePlugins = await adminApi.fetchRoutePlugins(route.id);
 
-            return {...item, plugins, routes};
+                return {...route, plugins: routePlugins};
+            }));
+
+            return {...item, plugins, routes: routesWithPlugins};
         }));
 
     }
 
-    const consumers = await fetchConsumers();
+    const consumers = await adminApi.fetchConsumers();
     const consumersWithCredentialsAndAcls = await Promise.all(consumers.map(async consumer => {
         if (consumer.custom_id && !consumer.username) {
             console.log(`Consumers with only custom_id not supported: ${consumer.custom_id}`);
@@ -56,11 +61,11 @@ export default async ({fetchApis, fetchPlugins, fetchGlobalPlugins, fetchConsume
         }
 
         const allCredentials = Promise.all(getSupportedCredentials().map(name => {
-            return fetchConsumerCredentials(consumer.id, name)
+            return adminApi.fetchConsumerCredentials(consumer.id, name)
                 .then(credentials => [name, credentials]);
         }));
 
-        var aclsFetched = await fetchConsumerAcls(consumer.id);
+        var aclsFetched = await adminApi.fetchConsumerAcls(consumer.id);
 
         var consumerWithCredentials = allCredentials
             .then(result => {
@@ -78,13 +83,17 @@ export default async ({fetchApis, fetchPlugins, fetchGlobalPlugins, fetchConsume
 
     }));
 
-    const allPlugins = await fetchGlobalPlugins();
+    const allPlugins = await adminApi.fetchGlobalPlugins();
     const globalPlugins = allPlugins.filter(plugin => {
-        return plugin.api_id === undefined;
+        return plugin.api_id === undefined && plugin.service_id === undefined && plugin.route_id === undefined;
     });
 
-    const upstreamsWithTargets = await fetchUpstreamsWithTargets({ version, fetchUpstreams, fetchTargets: semVer.gte(version, '0.12.0') ? fetchTargets : fetchTargetsV11Active });
-    const certificates = await fetchCertificatesForVersion({ version, fetchCertificates });
+    const upstreamsWithTargets = await fetchUpstreamsWithTargets({
+        version,
+        fetchUpstreams: adminApi.fetchUpstreams,
+        fetchTargets: semVer.gte(version, '0.12.0') ? adminApi.fetchTargets : adminApi.fetchTargetsV11Active
+    });
+    const certificates = await fetchCertificatesForVersion({ version, fetchCertificates: adminApi.fetchCertificates });
 
     return {
         services: servicesWithPluginsAndRoutes,
