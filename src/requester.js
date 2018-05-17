@@ -54,19 +54,24 @@ function fetchWithRetry(url, options) {
 
     return new Promise(function(resolve, reject) {
         var wrappedFetch = (n) => {
+            const retry = (error) => {
+                if (n <= retries) {
+                    setTimeout(() => {
+                        wrappedFetch(n + 1);
+                    }, retryDelay * Math.pow(2, n));
+                } else {
+                    reject(error);
+                }
+            };
             fetch(url, options)
                 .then(response => {
-                    resolve(response);
-                })
-                .catch(error => {
-                    if (n <= retries) {
-                        setTimeout(() => {
-                            wrappedFetch(n + 1)
-                        }, retryDelay * Math.pow(2, n));
+                    if (response.ok) {
+                        resolve(response);
                     } else {
-                        reject(error);
+                        retry(response);
                     }
-                });
+                })
+                .catch(retry);
         };
         wrappedFetch(0);
     });
