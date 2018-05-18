@@ -1,7 +1,7 @@
 import execute from '../lib/core';
 import { testAdminApi, exportToYaml, logger, getLog, getLocalState, tearDown } from './util';
 import readKongApi, { parseApiPostV10, parsePlugin, parseConsumer, parseAcl, parseGlobalPlugin } from '../lib/readKongApi';
-import configLoader from '../lib/configLoader';
+import { configLoader } from '../lib/configLoader';
 import fs from 'fs';
 import path from 'path';
 import pad from 'pad';
