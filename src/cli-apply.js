@@ -109,7 +109,7 @@ execute(config, adminApi({host, https, ignoreConsumers, cache}), screenLogger, r
     .then((out) => updateRouteIds(config, out))
     .then(pretty('yaml'))
     .then ((updatedConfig) => {
-        if (!isEqual(config, updatedConfig)) {
+        if (!isEqual(config, updatedConfig ) && !dryRun) {
             console.log(`Writing output to ${output}`);
             writeFileSync(output, updatedConfig);
         } else {

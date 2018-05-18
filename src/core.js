@@ -10,6 +10,7 @@ import { migrateApiDefinition } from './migrate';
 import { logReducer } from './kongStateLocal';
 import getCurrentStateSelector from './stateSelector';
 import diff from './diff';
+import uuidv4 from 'uuid/v4';
 import {
     noop,
     createService,
@@ -213,10 +214,24 @@ function _executeActionOnApi(action, adminApi, logger, dry = false) {
             logger({ type: 'request', params, uri: adminApi.router(params.endpoint) });
 
             return promise.then(() => {
+                let p;
                 if (dry) {
-                    return Promise.resolve('');
+                    
+                    const id = 
+                    p = Promise.resolve('')
+                        .then(response => Promise.all([
+                            {
+                                type: 'response',
+                                ok: true,
+                                uri: adminApi.router(params.endpoint),
+                                status: (params.method === 'POST') ? 201 : (params.method === 'DELETE') ? 204 : 200,
+                                statusText: 'DRY RUN',
+                                params,
+                            },
+                            JSON.stringify({ id: uuidv4(), ...params.body })
+                        ]));
                 } else {
-                    return adminApi
+                    p = adminApi
                         .requestEndpoint(params.endpoint, params)
                         .then(response => Promise.all([
                             {
@@ -228,20 +243,20 @@ function _executeActionOnApi(action, adminApi, logger, dry = false) {
                                 params,
                             },
                             response.text()
-                        ]))
-                        .then(([response, content]) => {
-                            logger({ ...response, content: parseResponseContent(content) });
-
-                            if (!response.ok) {
-                                const error = new Error(`${response.statusText}\n${content}`);
-                                error.response = response;
-
-                                throw error;
-                            }
-                            return state;
-                        });
+                        ]));
                 }
-             });
+                return p.then(([response, content]) => {
+                    logger({ ...response, content: parseResponseContent(content) });
+
+                    if (!response.ok) {
+                        const error = new Error(`${response.statusText}\n${content}`);
+                        error.response = response;
+
+                        throw error;
+                    }
+                    return state;
+                });
+            });
         }, Promise.resolve(state));
     };
 }
