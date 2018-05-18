@@ -1,12 +1,15 @@
 import execute from './core';
 import adminApi from './adminApi';
 import colors from 'colors';
-import configLoader from './configLoader';
+import { configLoader, resolvePath } from './configLoader';
 import program from 'commander';
 import requester from './requester';
 import {repeatableOptionCallback} from './utils';
 import { screenLogger } from './logger';
+import { writeFileSync } from 'fs';
+import {pretty} from './prettyConfig';
 import {addSchemasFromOptions, addSchemasFromConfig} from './consumerCredentials';
+import isEqual from 'lodash.isequal';
 
 program
     .version(require("../package.json").version)
@@ -25,8 +28,8 @@ program
     .parse(process.argv);
 
 if (!program.path) {
-  console.error('--path to the config file is required'.red);
-  process.exit(1);
+    console.error('--path to the config file is required'.red);
+    process.exit(1);
 }
 
 try{
@@ -46,45 +49,75 @@ let config = configLoader(program.path);
 let host = program.host || config.host || 'localhost:8001';
 let https = program.https || config.https || false;
 let ignoreConsumers = program.ignoreConsumers || !config.consumers || config.consumers.length === 0 || false;
-let output = program.output || program.path;
+let output = resolvePath(program.output || program.path);
 let { localState, cache, removeRoutes, dryRun } = program;
 
 config.headers = config.headers || [];
 
 let headers = new Map();
 ([...config.headers, ...program.header])
-  .map((h) => h.split(':'))
-  .forEach(([name, value]) => headers.set(name, value));
+    .map((h) => h.split(':'))
+    .forEach(([name, value]) => headers.set(name, value));
 
 headers
-  .forEach((value, name) => requester.addHeader(name, value));
+    .forEach((value, name) => requester.addHeader(name, value));
 
 if (!host) {
-  console.error('Kong admin host must be specified in config or --host'.red);
-  process.exit(1);
+    console.error('Kong admin host must be specified in config or --host'.red);
+    process.exit(1);
 }
 
 if (ignoreConsumers) {
     config.consumers = [];
 }
 else {
-  try{
-      addSchemasFromConfig(config);
-  } catch(e) {
-      console.error(e.message.red);
-      process.exit(1);
-  }
+    try{
+        addSchemasFromConfig(config);
+    } catch(e) {
+        console.error(e.message.red);
+        process.exit(1);
+    }
 }
+
+const updateRouteIds = ({host, headers, apis, services, ...config}, state) => {
+    const updatedServices = services.map(({routes, ...service}) => {
+        const updatedRoutes = routes.map(({name, id, ...route}) => {
+            const updatedId = state.services.find((s) => s.name === service.name).routes.find((r) => r.name == name).id;
+            return {
+                name,
+                id: updatedId,
+                ...route
+            };
+        });
+        return {
+            ...service,
+            routes: updatedRoutes
+        };
+    });
+    return {
+        host,
+        headers,
+        apis,
+        services: updatedServices,
+        ...config
+    };
+};
 
 console.log(`Apply config to ${host}`.green);
 
 execute(config, adminApi({host, https, ignoreConsumers, cache}), screenLogger, removeRoutes, dryRun, localState)
-    .then ((out) => {
-        console.log(out);
+    .then((out) => updateRouteIds(config, out))
+    .then(pretty('yaml'))
+    .then ((updatedConfig) => {
+        if (!isEqual(config, updatedConfig)) {
+            console.log(`Writing output to ${output}`);
+            writeFileSync(output, updatedConfig);
+        } else {
+            console.log('Config is up-to-date');
+        }
         process.exit(0);
     })
     .catch(error => {
-        console.trace();
         console.error(`${error}`.red, '\n', error.stack);
         process.exit(1);
     });

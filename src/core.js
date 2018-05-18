@@ -86,7 +86,7 @@ const selectWorldStateBind = async (adminApi, internalLogger, localState = true)
             state = logReducer(state, log);
         });
 
-        return f => async () => f(_createWorld(getCurrentStateSelector(state)));
+        return f => async () => [f(_createWorld(getCurrentStateSelector(state))), getCurrentStateSelector(state)];
     }
 
     return _bindWorldState(adminApi);
@@ -198,7 +198,7 @@ function parseResponseContent(content) {
 
 function _executeActionOnApi(action, adminApi, logger, dry = false) {
     return async () => {
-        const _ps = await action();
+        const [_ps, state] = await action();
 
         const ps = (Array.isArray(_ps)) ? _ps : [_ps];
 
@@ -207,7 +207,7 @@ function _executeActionOnApi(action, adminApi, logger, dry = false) {
             if (params.noop) {
                 logger({ type: 'noop', params });
 
-                return Promise.resolve('No-op');
+                return Promise.resolve(state);
             }
 
             logger({ type: 'request', params, uri: adminApi.router(params.endpoint) });
@@ -238,10 +238,11 @@ function _executeActionOnApi(action, adminApi, logger, dry = false) {
 
                                 throw error;
                             }
+                            return state;
                         });
                 }
              });
-        }, Promise.resolve(''));
+        }, Promise.resolve(state));
     };
 }
 

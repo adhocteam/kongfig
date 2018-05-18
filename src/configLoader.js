@@ -5,9 +5,9 @@ import yaml from 'js-yaml';
 const log = {
     info: message => console.log(message.green),
     error: message => console.error(message.red)
-}
+};
 
-export default (configPath) => {
+export function configLoader(configPath) {
     if (!fs.existsSync(configPath)) {
         log.error(`Supplied --path '${configPath}' doesn't exist`.red);
         return process.exit(1);
@@ -44,7 +44,7 @@ export default (configPath) => {
     }
 }
 
-function resolvePath(configPath) {
+export function resolvePath(configPath) {
     if (path.isAbsolute(configPath)) {
         return configPath;
     }
