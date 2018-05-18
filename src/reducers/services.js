@@ -37,16 +37,19 @@ const routes = (state, log) => {
                 plugins: plugins(route.plugins, log)
             }
         ];
-    case 'add-service-route': return [
-        ...state.filter(route => route.name !== params.routeName),
-        {name: params.routeName, ...parseRoute(content), plugins: [] }
-    ];
+    case 'add-service-route':
+        const { name, ...rest } = parseRoute(content);
+        return [
+            ...state.filter(route => route.name !== params.routeName),
+            {name: params.routeName, ...rest, plugins: [] }
+        ];
     case 'update-service-route': return state.map(state => {
         if (state._info.id !== content.id) {
             return state;
         }
 
-        return { name: params.routeName, ...parseRoute(content) };
+        let { name, ...rest } = parseRoute(content);
+        return { name: params.routeName, ...rest };
     });
     case 'remove-service-route': return state.filter(route => route.id !== params.routeId );
     default: return state;

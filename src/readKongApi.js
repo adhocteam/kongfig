@@ -163,8 +163,11 @@ function parseApiPlugins(plugins) {
 export function parseRoute({ id, created_at, updated_at, service, ...rest }, serviceName = '', config = {}) {
     let name = null;
     if (serviceName !== '' && config.services) {
-        name = (config.services.find((s) => s.name === serviceName).routes || [])
-            .find((r) => r.id === id).name;
+        const route = (config.services.find((s) => s.name === serviceName).routes || [])
+              .find((r) => r.id === id);
+        if (route) {
+            name = route.name;
+        }
     }
     return { name: (name || id), id, attributes: {...rest}, _info: { id, updated_at, created_at } };
 }
