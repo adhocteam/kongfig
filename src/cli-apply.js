@@ -12,9 +12,11 @@ program
     .version(require("../package.json").version)
     .option('--path <value>', 'Path to the configuration file')
     .option('--host <value>', 'Kong admin host (default: localhost:8001)')
+    .option('--output <value>', 'File with updated route ids overwrites path by default')
     .option('--https', 'Use https for admin API requests')
     .option('--no-cache', 'Do not cache kong state in memory')
     .option('--no-remove-routes', 'Do not clean up old routes')
+    .option('--no-local-state', 'Do not use local state')
     .option('--ignore-consumers', 'Do not sync consumers')
     .option('--dry-run', 'Print requests but do not send them')
     .option('--header [value]', 'Custom headers to be added to all requests', (nextHeader, headers) => { headers.push(nextHeader); return headers }, [])
@@ -44,7 +46,8 @@ let config = configLoader(program.path);
 let host = program.host || config.host || 'localhost:8001';
 let https = program.https || config.https || false;
 let ignoreConsumers = program.ignoreConsumers || !config.consumers || config.consumers.length === 0 || false;
-let { cache, removeRoutes, dryRun } = program;
+let output = program.output || program.path;
+let { localState, cache, removeRoutes, dryRun } = program;
 
 config.headers = config.headers || [];
 
@@ -75,11 +78,13 @@ else {
 
 console.log(`Apply config to ${host}`.green);
 
-execute(config, adminApi({host, https, ignoreConsumers, cache}), screenLogger, removeRoutes, dryRun)
-    .then (() => {
+execute(config, adminApi({host, https, ignoreConsumers, cache}), screenLogger, removeRoutes, dryRun, localState)
+    .then ((out) => {
+        console.log(out);
         process.exit(0);
     })
     .catch(error => {
+        console.trace();
         console.error(`${error}`.red, '\n', error.stack);
         process.exit(1);
     });

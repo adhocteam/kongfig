@@ -160,7 +160,7 @@ function parseApiPlugins(plugins) {
     return plugins.map(parsePlugin);
 }
 
-function parseRoute({ id, created_at, updated_at, service, ...rest }) {
+export function parseRoute({ id, created_at, updated_at, service, ...rest }) {
     return { id, attributes: {...rest}, _info: { id, updated_at, created_at } };
 }
 
@@ -171,7 +171,7 @@ function parseRoutes(routes) {
     });
 }
 
-function parseService({
+export function parseService({
     name, plugins, host, connect_timeout, read_timeout,
     port, path, write_timeout, id, created_at, updated_at,
     protocol, retries }) {

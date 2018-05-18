@@ -4,7 +4,10 @@ const plugins = (state, log) => {
     const { params: { type, endpoint: { params, body } }, content } = log;
 
     switch (type) {
+
+    case 'add-route-plugin':
     case 'add-service-plugin': return [ ...state, parsePlugin(content) ];
+    case 'update-route-plugin':
     case 'update-service-plugin': return state.map(state => {
         if (state._info.id !== content.id) {
             return state;
@@ -12,6 +15,7 @@ const plugins = (state, log) => {
 
         return parsePlugin(content);
     });
+    case 'remove-route-plugin':
     case 'remove-service-plugin': return state.filter(plugin => plugin._info.id !== params.pluginId);
     default: return state;
     }
@@ -21,15 +25,30 @@ const routes = (state, log) => {
     const { params: { type, endpoint: { params, body } }, content } = log;
 
     switch (type) {
-    case 'add-service-route': return [ ...state, parseRoute(content) ];
+
+    case 'update-route-plugin':
+    case 'add-route-plugin':
+    case 'remove-route-plugin':
+        const route = state.find((route) => route.id === params.routeId);
+        return [
+            ...state,
+            {
+                ...route,
+                plugins: plugins(route.plugins, log)
+            }
+        ];
+    case 'add-service-route': return [
+        ...state.filter(route => route.name !== params.routeName),
+        {name: params.routeName, ...parseRoute(content), plugins: [] }
+    ];
     case 'update-service-route': return state.map(state => {
         if (state._info.id !== content.id) {
             return state;
         }
 
-        return parseRoute(content);
+        return { name: params.routeName, ...parseRoute(content) };
     });
-    case 'remove-service-route': return state.filter(route => route.id !== params.routeId);
+    case 'remove-service-route': return state.filter(route => route.id !== params.routeId );
     default: return state;
     }
 };
@@ -55,6 +74,9 @@ const service = (state, log) => {
 
     case 'add-service-route':
     case 'update-service-route':
+    case 'update-route-plugin':
+    case 'add-route-plugin':
+    case 'remove-route-plugin':
     case 'remove-service-route':
         if (state._info.id !== params.serviceId) {
             return state;
@@ -92,6 +114,9 @@ export default (state = [], log) => {
     case 'create-service': return [...state, service(undefined, log)];
     case 'remove-service': return state.filter(service => service.name !== params.name);
 
+    case 'update-route-plugin':
+    case 'add-route-plugin':
+    case 'remove-route-plugin':
     case 'update-service':
     case 'add-service-route':
     case 'update-service-route':

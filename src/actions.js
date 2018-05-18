@@ -63,29 +63,55 @@ export function updateApi(name, params) {
     };
 }
 
-export function addServiceRoute(serviceId, { attributes }) {
+export function addServiceRoute(serviceId, { name, attributes }) {
     return {
         type: 'add-service-route',
-        endpoint: {name: 'routes'},
+        endpoint: {name: 'routes', params: {serviceId, routeName: name}},
         method: 'POST',
         body: assign({}, attributes, { service: { id: serviceId } })
     };
 }
 
-export function removeServiceRoute(serviceId, { id }) {
+export function removeServiceRoute(serviceId, { id, name }) {
     return {
         type: 'remove-service-route',
-        endpoint: {name: 'route', params: {routeId: id}},
+        endpoint: {name: 'route', params: {serviceId, routeId: id, routeName: name}},
         method: 'DELETE',
     };
 }
 
-export function updateServiceRoute(serviceId, { id, attributes }) {
+export function updateServiceRoute(serviceId, { id, attributes, name }) {
     return {
         type: 'update-service-route',
-        endpoint: {name: 'route', params: {routeId: id}},
+        endpoint: {name: 'route', params: {serviceId, routeId: id, routeName: name}},
         method: 'PATCH',
         body: { attributes, serviceId: { id: serviceId } }
+    };
+}
+
+export function addRoutePlugin(serviceId, routeId, pluginName, params) {
+    return {
+        type: 'add-route-plugin',
+        endpoint: {name: 'route-plugins', params: {serviceId, routeId, pluginName}},
+        method: 'POST',
+        body: assign({}, params, {name: pluginName})
+    };
+}
+
+export function removeRoutePlugin(serviceId, routeId, pluginId) {
+    return {
+        type: 'remove-route-plugin',
+        endpoint: {name: 'route-plugin', params: {serviceId, routeId, pluginId}},
+        method: 'DELETE',
+    };
+}
+
+export function updateRoutePlugin(serviceId, routeId, pluginId, params) {
+    return {
+        type: 'update-route-plugin',
+        endpoint: {name: 'route-plugin', params: {serviceId, routeId, pluginId}},
+        method: 'PATCH',
+        body: params
     };
 }
 
