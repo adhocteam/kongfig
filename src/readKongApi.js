@@ -4,13 +4,13 @@ import { parseUpstreams } from './parsers/upstreams';
 import { parseCertificates } from './parsers/certificates';
 import getCurrentStateSelector from './stateSelector';
 
-export default async (adminApi) => {
+export default async (adminApi, config) => {
     return Promise.all([kongState(adminApi), adminApi.fetchPluginSchemas(), adminApi.fetchKongVersion()])
         .then(([state, schemas, version]) => {
             return getCurrentStateSelector({
                 _info: { version },
                 apis: parseApis(state.apis, version),
-                services: parseServices(state.services, version),
+                services: parseServices(state.services, version, config),
                 consumers: parseConsumers(state.consumers),
                 plugins: parseGlobalPlugins(state.plugins),
                 upstreams: semVer.gte(version, '0.10.0') ? parseUpstreams(state.upstreams) : undefined,
@@ -160,13 +160,18 @@ function parseApiPlugins(plugins) {
     return plugins.map(parsePlugin);
 }
 
-export function parseRoute({ id, created_at, updated_at, service, ...rest }) {
-    return { id, attributes: {...rest}, _info: { id, updated_at, created_at } };
+export function parseRoute({ id, created_at, updated_at, service, ...rest }, serviceName = '', config = {}) {
+    let name = null;
+    if (serviceName !== '' && config.services) {
+        name = (config.services.find((s) => s.name === serviceName).routes || [])
+            .find((r) => r.id === id).name;
+    }
+    return { name: (name || id), id, attributes: {...rest}, _info: { id, updated_at, created_at } };
 }
 
-function parseRoutes(routes) {
+function parseRoutes(routes, serviceName= '', config = {}) {
     return routes.map(({ plugins, ...route }) => {
-        const { id, ...rest } = parseRoute(route);
+        const { id, ...rest } = parseRoute(route, serviceName, config);
         return { id, plugins: parseApiPlugins(plugins), ...rest };
     });
 }
@@ -195,11 +200,11 @@ export function parseService({
     };
 }
 
-function parseServices(services, version) {
+function parseServices(services, version, config = {}) {
     if (semVer.gte(version, '0.13.0')) {
         return services.map(({ plugins, routes, ...service }) => {
             const { name, ...rest } = parseService(service);
-            return { name, plugins: parseApiPlugins(plugins), routes: parseRoutes(routes), ...rest };
+            return { name, plugins: parseApiPlugins(plugins), routes: parseRoutes(routes, name, config), ...rest };
         });
     }
     return [];

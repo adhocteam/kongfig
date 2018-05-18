@@ -77,10 +77,10 @@ const logFanout = () => {
     };
 };
 
-const selectWorldStateBind = async (adminApi, internalLogger, localState = true) => {
+const selectWorldStateBind = async (adminApi, internalLogger, config = {}, localState = true) => {
     if (localState) {
         internalLogger.logger({ type: 'experimental-features', message: `Using experimental feature: local state`.blue.bold});
-        let state = await readKongApi(adminApi);
+        let state = await readKongApi(adminApi, config);
 
         internalLogger.subscribe(log => {
             state = logReducer(state, log);
@@ -124,7 +124,7 @@ export default async function execute(config, adminApi, logger = () => {}, remov
     });
 
     return actions
-        .map(await selectWorldStateBind(adminApi, internalLogger, localState))
+        .map(await selectWorldStateBind(adminApi, internalLogger, config, localState))
         .reduce((promise, action) => promise.then(_executeActionOnApi(action, adminApi, internalLogger.logger, dryRun)), Promise.resolve(''));
 }
 
@@ -427,10 +427,10 @@ function _createWorld({apis, consumers, plugins, upstreams, services, certificat
             return aclId;
         },
 
-        getServiceRoute: (serviceName, routeName) => {
-            const route = world.getService(serviceName).routes.find(route => route.name === routeName);
+        getServiceRoute: (serviceName, routeNameId) => {
+            const route = world.getService(serviceName).routes.find(route => route.name === routeNameId || route.id === routeNameId);
 
-            invariant(route, `Unable to find route ${routeName}`);
+            invariant(route, `Unable to find route ${routeNameId}`);
 
             return route;
         },
@@ -474,7 +474,7 @@ function _createWorld({apis, consumers, plugins, upstreams, services, certificat
         },
 
         isRouteUpToDate: (serviceName, route) => {
-            return diff(route.attributes, world.getServiceRoute(serviceName, route.name).attributes).length == 0;
+            return diff(route.attributes, world.getServiceRoute(serviceName, route.id).attributes).length == 0;
         },
 
         isApiPluginUpToDate: (apiName, plugin, consumerID) => {
@@ -826,7 +826,7 @@ function _routePlugin(serviceName, routeName, plugin) {
         }
 
         if (world.hasRoutePlugin(serviceName, routeName, plugin.name, consumerID)) {
-            if (world.isRouteIdPluginUpToDate(serviceName, routeName, plugin, consumerID)) {
+            if (world.isRoutePluginUpToDate(serviceName, routeName, plugin, consumerID)) {
                 return noop({ type: 'noop-plugin', plugin });
             }
 
