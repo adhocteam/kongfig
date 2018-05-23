@@ -17,10 +17,6 @@ const get = (uri, agent = defaultAgent) => {
         }
     };
 
-    if (defaultAgent) {
-        options.agent = defaultAgent;
-    }
-
     return request(uri, options);
 };
 
@@ -36,6 +32,10 @@ const request = (uri, opts) => {
         opts,
         { headers: requestHeaders }
     );
+
+    if (defaultAgent) {
+        options.agent = defaultAgent;
+    }
 
     return fetchWithRetry(uri, options);
 };
