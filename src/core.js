@@ -216,8 +216,6 @@ function _executeActionOnApi(action, adminApi, logger, dry = false) {
             return promise.then(() => {
                 let p;
                 if (dry) {
-                    
-                    const id = 
                     p = Promise.resolve('')
                         .then(response => Promise.all([
                             {
@@ -316,6 +314,13 @@ function _createWorld({apis, consumers, plugins, upstreams, services, certificat
             invariant(plugin, `Unable to find plugin ${pluginName}`);
 
             return plugin;
+        },
+        getRoutePluginId: (serviceName, routeName, pluginName, pluginConsumerID) => {
+            const pluginId = world.getServiceRoute(serviceName, routeName).plugins.find(plugin => plugin.name == pluginName && plugin._info.consumer_id == pluginConsumerID).id;
+
+            invariant(pluginId, `Route plugin ${pluginName} doesn't have an id`);
+
+            return pluginId;
         },
         getRoutePlugin: (serviceName, routeName, pluginName, pluginConsumerID) => {
             const plugin = world.getServiceRoute(serviceName, routeName).plugins.find(plugin => plugin.name == pluginName && plugin._info.consumer_id == pluginConsumerID);
