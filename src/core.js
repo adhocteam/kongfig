@@ -316,7 +316,7 @@ function _createWorld({apis, consumers, plugins, upstreams, services, certificat
             return plugin;
         },
         getRoutePluginId: (serviceName, routeName, pluginName, pluginConsumerID) => {
-            const pluginId = world.getServiceRoute(serviceName, routeName).plugins.find(plugin => plugin.name == pluginName && plugin._info.consumer_id == pluginConsumerID).id;
+            const pluginId = world.getServiceRoute(serviceName, routeName).plugins.find(plugin => plugin.name == pluginName && plugin._info.consumer_id == pluginConsumerID)._info.id;
 
             invariant(pluginId, `Route plugin ${pluginName} doesn't have an id`);
 

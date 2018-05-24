@@ -22,12 +22,12 @@ export default function createRouter(host, https) {
         case 'routes': return `${adminApiRoot}/routes`;
         case 'route': return `${adminApiRoot}/routes/${params.routeId}`;
         case 'route-plugins': return `${adminApiRoot}/routes/${params.routeId}/plugins`;
-        case 'route-plugins': return `${adminApiRoot}/routes/${params.routeId}/plugins/]${params.pluginId}`;
+        case 'route-plugin': return `${adminApiRoot}/plugins/${params.pluginId}`;
 
         case 'services': return `${adminApiRoot}/services`;
         case 'service': return `${adminApiRoot}/services/${params.name}`;
         case 'service-plugins': return `${adminApiRoot}/services/${params.serviceId}/plugins`;
-        case 'service-plugin': return `${adminApiRoot}/services/${params.serviceId}/plugins/${params.pluginId}`;
+        case 'service-plugin': return `${adminApiRoot}/plugins/${params.pluginId}`;
         case 'service-routes': return `${adminApiRoot}/services/${params.serviceId}/routes`;
         case 'service-route': return `${adminApiRoot}/services/${params.serviceId}/routes/${params.routeId}`;
 
