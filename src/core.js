@@ -838,7 +838,7 @@ function _routePlugin(serviceName, routeName, plugin) {
                 return removeRoutePlugin(
                     world.getServiceId(serviceName),
                     world.getServiceRoute(serviceName, routeName).id,
-                    world.getRoutePluginId(routeName, plugin.name, consumerID)
+                    world.getRoutePluginId(serviceName, routeName, plugin.name, consumerID)
                 );
             }
 
@@ -853,7 +853,7 @@ function _routePlugin(serviceName, routeName, plugin) {
             return updateRoutePlugin(
                 world.getServiceId(serviceName),
                 world.getServiceRoute(serviceName, routeName).id,
-                world.getRoutePluginId(routeName, plugin.name, consumerID),
+                world.getRoutePluginId(serviceName, routeName, plugin.name, consumerID),
                 finalPlugin.attributes
             );
         }
