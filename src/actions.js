@@ -85,7 +85,7 @@ export function updateServiceRoute(serviceId, { id, attributes, name }) {
         type: 'update-service-route',
         endpoint: {name: 'route', params: {serviceId, routeId: id, routeName: name}},
         method: 'PATCH',
-        body: { attributes, service: { id: serviceId } }
+        body: { attributes: { ...attributes, service: { id: serviceId } } }
     };
 }
 
