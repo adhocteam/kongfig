@@ -330,7 +330,7 @@ function _createWorld({apis, consumers, plugins, upstreams, services, certificat
       return plugin;
     },
     getServicePluginId: (serviceName, pluginName, pluginConsumerID) => {
-      const pluginId = world.getPlugin(serviceName, pluginName, pluginConsumerID)._info.id;
+      const pluginId = world.getServicePlugin(serviceName, pluginName, pluginConsumerID)._info.id;
 
       invariant(pluginId, `Unable to find plugin id for ${serviceName} and ${pluginName}`);
 
