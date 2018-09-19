@@ -47,8 +47,7 @@
       "<rootDir>/node_modules/babel-polyfill/dist/polyfill.js"
     ],
     "testMatch": [
-      "<rootDir>/test/*.js",
-      "<rootDir>/test-integration/*.test.js"
+      "<rootDir>/test/*.js"
     ],
     "transformIgnorePatterns": [
       "<rootDir>/node_modules/",
