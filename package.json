@@ -9,9 +9,7 @@
   "preferGlobal": true,
   "scripts": {
     "pretest": "npm run-script build",
-    "test": "jest --runInBand",
     "build": "babel src --out-dir lib",
-    "preversion": "npm run-script test",
     "version": "npm run-script build",
     "postversion": "git push && git push --tags",
     "publish-patch": "npm version patch && npm publish"
