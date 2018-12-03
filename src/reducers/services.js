@@ -30,7 +30,6 @@ const routes = (state, log) => {
   case 'add-route-plugin':
   case 'remove-route-plugin':
     const route = state.find((route) => route.id === params.routeId);
-    console.log(route. log);
     return [
       ...state,
       {
