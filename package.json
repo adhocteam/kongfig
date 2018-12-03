@@ -8,11 +8,11 @@
   },
   "preferGlobal": true,
   "scripts": {
-    "pretest": "yarn build",
+    "pretest": "npm run-script build",
     "test": "jest --runInBand",
     "build": "babel src --out-dir lib",
-    "preversion": "yarn test",
-    "version": "yarn build",
+    "preversion": "npm run-script test",
+    "version": "npm run-script build",
     "postversion": "git push && git push --tags",
     "publish-patch": "npm version patch && npm publish"
   },
