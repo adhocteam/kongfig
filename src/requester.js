@@ -68,7 +68,9 @@ function fetchWithRetry(url, options) {
                     if (response.ok) {
                         resolve(response);
                     } else {
-                        retry(response);
+                      response.text().then(body => {
+                        retry(new Error(`${response.status} - ${response.statusText}: ${JSON.stringify(body)}`));
+                      });
                     }
                 })
                 .catch(retry);
