@@ -1,6 +1,7 @@
 import createRouter from './router';
 import requester from './requester';
-import { parseVersion } from './utils.js'
+import { parseVersion } from './utils.js';
+import { parse, format } from 'url';
 
 let pluginSchemasCache;
 let kongVersionCache;
@@ -85,6 +86,13 @@ function getPluginScheme(plugin, schemaRoute) {
         .then(({fields}) => [plugin, fields]);
 }
 
+function fixNextUri(uri, nextUri) {
+    const { protocol, auth, hostname, port, pathname, path } = parse(uri);
+    const { hash, search, query } = parse(nextUri);
+
+    return format({ protocol, auth, hostname, port, hash, search, query, pathname, path });
+}
+
 function getPaginatedJson(uri) {
     return requester.get(uri)
     .then(response => {
@@ -115,7 +123,7 @@ function getPaginatedJson(uri) {
             return json.data;
         }
 
-        return getPaginatedJson(json.next).then(data => json.data.concat(data));
+        return getPaginatedJson(fixNextUri(uri, json.next)).then(data => json.data.concat(data));
     });
 }
 
