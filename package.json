@@ -1,8 +1,8 @@
 {
-  "name": "@edpaget/kongfig",
+  "name": "@adhocteam/kongfig",
   "version": "2.0.13",
   "description": "A tool for Kong to allow declarative configuration.",
-  "repository": "https://github.com/mybuilder/kongfig",
+  "repository": "https://github.com/adhocteam/kongfig",
   "bin": {
     "kongfig": "./bin/kongfig"
   },
