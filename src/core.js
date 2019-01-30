@@ -9,7 +9,7 @@ import {normalize as normalizeAttributes} from './utils';
 import { migrateApiDefinition } from './migrate';
 import { logReducer } from './kongStateLocal';
 import getCurrentStateSelector from './stateSelector';
-import diff from './diff';
+import { bidirDiff, diff } from './diff';
 import uuidv4 from 'uuid/v4';
 import {
   noop,
@@ -614,7 +614,7 @@ function _createWorld({apis, consumers, plugins, upstreams, services, certificat
 function isAttributesWithConfigUpToDate(defined, current) {
   const excludingConfig = ({ config, ...rest }) => rest;
 
-  return diff(defined.config, current.config).length === 0
+  return bidirDiff(defined.config, current.config).length === 0
     && diff(excludingConfig(defined), excludingConfig(current)).length === 0;
 }
 

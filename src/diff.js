@@ -19,7 +19,19 @@ const isValueDifferent = (a, b) => {
   return JSON.stringify(a) !== JSON.stringify(b);
 }
 
-export default (defined = {}, server = {}) => {
+export const bidirDiff = (defined, server) => {
+  const allKeys = [...Object.keys(defined), ...Object.keys(server)];
+  const uniqueKeys = [...new Set(allKeys)];
+  return uniqueKeys.filter((key) => {
+    if (isValueDifferent(defined[key], server[key])) {
+      return true;
+    }
+
+    return false;
+  });
+}
+
+export const diff = (defined = {}, server = {}) => {
   const keys = Object.keys(defined);
 
   return keys.reduce((changed, key) => {

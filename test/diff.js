@@ -1,5 +1,5 @@
 import expect from 'expect.js';
-import diff from '../src/diff';
+import { bidirDiff, diff } from '../src/diff';
 
 describe("diff", () => {
     const defined = {
@@ -26,7 +26,7 @@ describe("diff", () => {
         plugins: []
     };
 
-    it("noting changed", () => {
+    it("nothing changed", () => {
         expect(diff(defined, server)).to.be.eql([]);
     });
 
@@ -48,6 +48,14 @@ describe("diff", () => {
 
     it('methods added', () => {
         expect(diff({...defined, methods: ['GET']}, server)).to.be.eql(['methods']);
+    });
+
+    it("keys removed", () => {
+      var delta = diff({}, {key: "value"});
+      expect(delta.length).to.be.eql(0);
+
+      var bidirDelta = bidirDiff({}, {key: "value"});
+      expect(bidirDelta.length).to.be.eql(1);
     });
 });
 
