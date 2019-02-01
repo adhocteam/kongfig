@@ -18,7 +18,7 @@ const _migrateV1toV2 = (api) => {
         request_host,
         request_path,
         strip_request_path,
-        ...oldAttributes,
+        ...oldAttributes
     } = api.attributes;
 
     const newAttributes = {
