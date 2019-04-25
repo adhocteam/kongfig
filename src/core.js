@@ -780,7 +780,7 @@ function _route(serviceName, route) {
 
   return world => {
     if (route.ensure == 'removed') {
-      if (world.hasRoute(servcieName, route)) {
+      if (world.hasRoute(serviceName, route)) {
         return removeServiceRoute(world.getServiceId(serviceName), route);
       }
 
