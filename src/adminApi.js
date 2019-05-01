@@ -117,12 +117,9 @@ function getPaginatedJson(uri) {
 
             return json.data;
         }
-
-        if (json.data.length < 100) {
-            // FIXME an hopeful hack to prevent a loop
+        if ( json.next == null ) {
             return json.data;
         }
-
         return getPaginatedJson(fixNextUri(uri, json.next)).then(data => json.data.concat(data));
     });
 }
