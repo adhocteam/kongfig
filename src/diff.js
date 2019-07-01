@@ -1,12 +1,5 @@
 import isEmpty from 'lodash.isempty';
 
-// https://github.com/Kong/kong/blob/0.14.0/kong/plugins/acl/schema.lua
-const ARRAY_OR_STRING_KEYS = [
-  'redirect_uri',
-  'whitelist',
-  'blacklist'
-];
-
 const isValueSameOneArrayElement = (a, b) => {
   return typeof a === 'string'
     && Array.isArray(b)
@@ -51,9 +44,9 @@ export default (defined = {}, server = {}) => {
   const keys = Object.keys(defined);
 
   return keys.reduce((changed, key) => {
-    if (ARRAY_OR_STRING_KEYS.includes(key)) {
-      // hack that allows keys that can be a string
-      // or array of strings
+    if (key === 'redirect_uri') {
+      // hack for >=0.8.2 that allows multiple redirect_uris,
+      // but accepts a string as well
       if (isValueSameOneArrayElement(defined[key], server[key])) {
         return changed;
       }
@@ -62,6 +55,7 @@ export default (defined = {}, server = {}) => {
     if (isValueDifferent(defined[key], server[key])) {
       return [...changed, key];
     }
+
     return changed;
   }, []);
 };
