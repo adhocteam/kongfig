@@ -53,7 +53,7 @@ export default (defined = {}, server = {}) => {
   return keys.reduce((changed, key) => {
     if (ARRAY_OR_STRING_KEYS.includes(key)) {
       // hack that allows keys that can be a string
-      // or array of strings,
+      // or array of strings
       if (isValueSameOneArrayElement(defined[key], server[key])) {
         return changed;
       }
