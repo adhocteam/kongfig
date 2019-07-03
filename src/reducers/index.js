@@ -1,4 +1,3 @@
-import apis from './apis';
 import plugins from './plugins';
 import consumers from './consumers';
 import upstreams from './upstreams';
@@ -25,7 +24,6 @@ const _info = (state = {}, log) => {
 
 export default combine({
     _info,
-    apis,
     plugins,
     consumers,
     upstreams,

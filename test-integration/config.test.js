@@ -10,7 +10,6 @@ jest.setTimeout(10000);
 
 const ignoreConfigOrder = state => ({
     ...state,
-    apis: state.apis.sort((a, b) => a.name > b.name ? 1 : -1),
     consumers: state.consumers.sort((a, b) => a.username > b.username ? 1 : -1),
     plugins: state.plugins.sort((a, b) => a.attributes.config.minute - b.attributes.config.minute),
     upstreams: state.upstreams.map(upstream => ({
