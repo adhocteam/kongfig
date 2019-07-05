@@ -7,6 +7,7 @@ import path from 'path';
 import pad from 'pad';
 
 beforeEach(tearDown);
+jest.setTimeout(10000);
 
 const requestToCurl = (uri, method, body) => {
     switch (method) {
