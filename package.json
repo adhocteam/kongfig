@@ -14,7 +14,7 @@
     "postversion": "git push && git push --tags",
     "publish-patch": "npm version patch && npm publish",
     "test": "jest --testPathPattern=test/.*",
-    "test-integration": "jest --runInBand --testPathPattern=test-integration/.*"
+    "test-integration": "TEST_INTEGRATION_KONG_HOST=localhost:8001 jest --runInBand --testPathPattern=test-integration/.*"
   },
   "author": "MyBuilder Ltd",
   "license": "MIT",
