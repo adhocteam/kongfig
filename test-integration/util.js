@@ -56,7 +56,7 @@ const _ignoreKeys = (obj, keys) => {
         return obj;
     }
 
-    return Object.keys(obj).reduce((x, key) => {
+    return obj && Object.keys(obj).reduce((x, key) => {
         if (typeof obj[key] === 'string' && obj[key].match(UUIDRegex)) {
             const value = obj[key].match(UUIDRegex).reduce((value, uuid) => {
                 if (!uuids.hasOwnProperty(uuid)) {
