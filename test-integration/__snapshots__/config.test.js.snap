@@ -49,8 +49,10 @@ Array [
   Object {
     "params": Object {
       "body": Object {
+        "certificate": Object {
+          "id": "2b47ba9b-761a-492d-9a0c-000000000001",
+        },
         "name": "example.com",
-        "ssl_certificate_id": "2b47ba9b-761a-492d-9a0c-000000000001",
       },
       "endpoint": Object {
         "name": "certificate-snis",
@@ -63,15 +65,20 @@ Array [
   },
   Object {
     "content": Object {
+      "certificate": Object {
+        "id": "2b47ba9b-761a-492d-9a0c-000000000001",
+      },
       "created_at": "___created_at___",
+      "id": "2b47ba9b-761a-492d-9a0c-000000000002",
       "name": "example.com",
-      "ssl_certificate_id": "2b47ba9b-761a-492d-9a0c-000000000001",
     },
     "ok": true,
     "params": Object {
       "body": Object {
+        "certificate": Object {
+          "id": "2b47ba9b-761a-492d-9a0c-000000000001",
+        },
         "name": "example.com",
-        "ssl_certificate_id": "2b47ba9b-761a-492d-9a0c-000000000001",
       },
       "endpoint": Object {
         "name": "certificate-snis",
@@ -87,8 +94,10 @@ Array [
   Object {
     "params": Object {
       "body": Object {
+        "certificate": Object {
+          "id": "2b47ba9b-761a-492d-9a0c-000000000001",
+        },
         "name": "www.example.com",
-        "ssl_certificate_id": "2b47ba9b-761a-492d-9a0c-000000000001",
       },
       "endpoint": Object {
         "name": "certificate-snis",
@@ -101,15 +110,20 @@ Array [
   },
   Object {
     "content": Object {
+      "certificate": Object {
+        "id": "2b47ba9b-761a-492d-9a0c-000000000001",
+      },
       "created_at": "___created_at___",
+      "id": "2b47ba9b-761a-492d-9a0c-000000000003",
       "name": "www.example.com",
-      "ssl_certificate_id": "2b47ba9b-761a-492d-9a0c-000000000001",
     },
     "ok": true,
     "params": Object {
       "body": Object {
+        "certificate": Object {
+          "id": "2b47ba9b-761a-492d-9a0c-000000000001",
+        },
         "name": "www.example.com",
-        "ssl_certificate_id": "2b47ba9b-761a-492d-9a0c-000000000001",
       },
       "endpoint": Object {
         "name": "certificate-snis",
@@ -243,6 +257,7 @@ Array [
   Object {
     "content": Object {
       "created_at": "___created_at___",
+      "custom_id": null,
       "id": "2b47ba9b-761a-492d-9a0c-000000000001",
       "username": "iphone-app",
     },
@@ -414,6 +429,7 @@ exports[`should apply consumer.example.yml 2`] = `
 services: []
 consumers:
   - username: iphone-app
+    custom_id: null
     acls:
       - group: foo-group
     credentials:
@@ -554,6 +570,7 @@ Array [
   Object {
     "content": Object {
       "created_at": "___created_at___",
+      "custom_id": null,
       "id": "2b47ba9b-761a-492d-9a0c-000000000001",
       "username": "iphone-app",
     },
@@ -856,6 +873,7 @@ exports[`should apply key-auth.example.yml 2`] = `
 services: []
 consumers:
   - username: iphone-app
+    custom_id: null
     acls: []
     credentials:
       - name: key-auth
@@ -890,6 +908,7 @@ Array [
   Object {
     "content": Object {
       "created_at": "___created_at___",
+      "custom_id": null,
       "id": "2b47ba9b-761a-492d-9a0c-000000000001",
       "username": "anonymous-user",
     },
@@ -926,6 +945,7 @@ Array [
   Object {
     "content": Object {
       "created_at": "___created_at___",
+      "custom_id": null,
       "id": "2b47ba9b-761a-492d-9a0c-000000000002",
       "username": "iphone-app",
     },
@@ -1243,9 +1263,11 @@ exports[`should apply key-auth-anonymous.example.yml 2`] = `
 services: []
 consumers:
   - username: anonymous-user
+    custom_id: null
     acls: []
     credentials: []
   - username: iphone-app
+    custom_id: null
     acls: []
     credentials:
       - name: key-auth
@@ -1280,6 +1302,7 @@ Array [
   Object {
     "content": Object {
       "created_at": "___created_at___",
+      "custom_id": null,
       "id": "2b47ba9b-761a-492d-9a0c-000000000001",
       "username": "user-john",
     },
@@ -1758,6 +1781,7 @@ exports[`should apply plugin-per-consumer.example.yml 2`] = `
 services: []
 consumers:
   - username: user-john
+    custom_id: null
     acls: []
     credentials: []
 plugins:
@@ -1927,6 +1951,7 @@ Array [
       "created_at": "___created_at___",
       "hash_fallback": "none",
       "hash_on": "none",
+      "hash_on_cookie_path": "/",
       "healthchecks": Object {
         "active": Object {
           "concurrency": 10,
