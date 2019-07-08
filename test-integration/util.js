@@ -1,11 +1,11 @@
-import adminApi from '../lib/adminApi';
-import readKongApi from '../lib/readKongApi';
-import execute from '../lib/core';
-import { logReducer } from '../lib/kongStateLocal';
-import getCurrentStateSelector from '../lib/stateSelector';
+import adminApi from '../src/adminApi';
+import readKongApi from '../src/readKongApi';
+import execute from '../src/core';
+import { logReducer } from '../src/kongStateLocal';
+import getCurrentStateSelector from '../src/stateSelector';
 import invariant from 'invariant';
 import pad from 'pad';
-import { pretty } from '../lib/prettyConfig';
+import { pretty } from '../src/prettyConfig';
 
 invariant(process.env.TEST_INTEGRATION_KONG_HOST, `
     Please set ${'TEST_INTEGRATION_KONG_HOST'.bold} env variable
