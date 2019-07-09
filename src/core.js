@@ -726,13 +726,14 @@ function validateServiceRequiredAttributes(service) {
   }
 
   if (!service.hasOwnProperty('attributes')) {
-    throw Error(`"${service.name}" api has to declare "host", "protocol", and "port" attributes`);
+    throw Error(`"${service.name}" service has to declare "host", "protocol", and "port" attributes or "url" attribute.`);
   }
 
-  if (!service.attributes.hasOwnProperty('port') ||
+  if ((!service.attributes.hasOwnProperty('port') ||
       !service.attributes.hasOwnProperty('host') ||
-      !service.attributes.hasOwnProperty('protocol')) {
-    throw Error(`"${service.name}" api has to declare "host", "protocol", and "port" attributes`);
+      !service.attributes.hasOwnProperty('protocol')) &&
+      !service.attributes.hasOwnProperty('url') ) {
+    throw Error(`"${service.name}" service has to declare "host", "protocol", and "port" attributes or "url" attribute.`);
   }
 }
 
