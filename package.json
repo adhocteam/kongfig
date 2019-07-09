@@ -13,7 +13,8 @@
     "version": "npm run-script build",
     "postversion": "git push && git push --tags",
     "publish-patch": "npm version patch && npm publish",
-    "test": "jest"
+    "test": "jest --testPathPattern=test/.*",
+    "test-integration": "TEST_INTEGRATION_KONG_HOST=localhost:8001 jest --runInBand --testPathPattern=test-integration/.*"
   },
   "author": "MyBuilder Ltd",
   "license": "MIT",
@@ -46,15 +47,8 @@
     "jest-cli": "^24.0.0"
   },
   "jest": {
-    "roots": [
-      "src/",
-      "test/"
-    ],
     "setupFiles": [
       "<rootDir>/node_modules/@babel/polyfill/dist/polyfill.js"
-    ],
-    "testMatch": [
-      "<rootDir>/test/*.js"
     ],
     "testPathIgnorePatterns": [
       "<rootDir>/lib/",
