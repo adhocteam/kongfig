@@ -25,6 +25,7 @@ const ignoreConfigOrder = state => ({
         ...upstream,
         targets: upstream.targets.sort((a, b) => a.target > b.target ? 1 : -1),
     })),
+    services: state.services.sort((a, b) => a.name > b.name ? 1 : -1),
 });
 
 const codeBlock = (code, lang = '') => `\`\`\`${lang}\n${code}\n\`\`\``;
