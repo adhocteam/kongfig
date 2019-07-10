@@ -641,7 +641,7 @@ function removeOldRoutes(service, removeRoutes) {
       return noop({ type: 'noop-skip-remove-routes', service });
     }
 
-    if (world.hasService) {
+    if (world.hasService(service.name)) {
       const oldService = world.getService(service.name);
       return oldService.routes
         .filter((route) => !(service.routes.find((r) => r.id === route.id)))
