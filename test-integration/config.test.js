@@ -1,5 +1,5 @@
 import execute from '../src/core';
-import { testAdminApi, exportToYaml, logger, getLog, getLocalState, tearDown } from './util';
+import { testAdminApi, exportToYaml, logger, getLog, getLocalState, tearDown, ignoreKeys } from './util';
 import readKongApi from '../src/readKongApi';
 import { configLoader } from '../src/configLoader';
 import fs from 'fs';
@@ -60,7 +60,7 @@ fs.readdirSync(path.resolve(__dirname, './config')).forEach(filename => {
         const kongState = ignoreConfigOrder(await readKongApi(testAdminApi));
 
         expect(getLog()).toMatchSnapshot();
-        expect(exportToYaml(kongState)).toMatchSnapshot();
+        expect(exportToYaml(ignoreKeys(kongState))).toMatchSnapshot();
         expect(ignoreConfigOrder(getLocalState())).toEqual(kongState);
 
         if (filename.endsWith('example.yml')) {
