@@ -93,9 +93,13 @@ const cleanupKong = async () => {
         plugins: results.plugins.map(plugin => ({ ...plugin, ensure: 'removed' })),
         upstreams: results.upstreams.map(upstream => ({ ...upstream, ensure: 'removed' })),
         certificates: results.certificates.map(certificate => ({ ...certificate, ensure: 'removed' })),
-        services: results.services.map(service => ({ ...service, ensure: 'removed' })),
+        services: results.services.map(service => ({ ...markRoutesRemoved(service), ensure: 'removed' })),
     }, testAdminApi);
 };
+
+const markRoutesRemoved = (service) => {
+    return { ...service, routes: service.routes.map((route) => ({ ...route, ensure: 'removed' })) };
+}
 
 export const tearDown = async () => {
     uuids = {};
