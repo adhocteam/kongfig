@@ -8,13 +8,6 @@ import path from 'path';
 beforeEach(tearDown);
 jest.setTimeout(10000);
 
-const requestToCurl = (uri, method, body) => {
-    switch (method) {
-        case 'POST': return `$ curl -i -X POST -H "Content-Type: application/json" \\\n  --url ${uri} \\\n  --data '${JSON.stringify(body)}'`;
-        default: return ``;
-    }
-};
-
 const ignoreConfigOrder = state => ({
     ...state,
     apis: state.apis.sort((a, b) => a.name > b.name ? 1 : -1),
