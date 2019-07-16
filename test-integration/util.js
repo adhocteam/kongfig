@@ -16,6 +16,7 @@ invariant(process.env.TEST_INTEGRATION_KONG_HOST, `
 `);
 
 const UUIDRegex = /[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}/g;
+const IGNORED_KEYS = ['created_at', 'version', 'orderlist', 'updated_at']
 let uuids = {};
 let log = [];
 let rawLog = [];
@@ -44,14 +45,10 @@ export const logger = message => {
     }
 
     rawLog.push(m);
-    log.push(ignoreKeys(m, ['created_at', 'version', 'orderlist']));
+    log.push(ignoreKeys(m));
 };
 
-const _ignoreKeys = (obj, keys) => {
-    if (Array.isArray(obj)) {
-        return obj;
-    }
-
+const _ignoreKeys = (obj) => {
     if (typeof obj !== 'object') {
         return obj;
     }
@@ -67,18 +64,26 @@ const _ignoreKeys = (obj, keys) => {
                 return value.replace(uuid, uuids[uuid]);
             }, obj[key]);
 
-            return { ...x, [key]: value };
-        } else if (keys.indexOf(key) !== -1) {
-            return { ...x, [key]: `___${key}___` };
+            return addElement(x, value, key);
+        } else if (IGNORED_KEYS.includes(key)) {
+            return addElement(x, `___${key}___`, key);
         }
 
-        return { ...x, [key]: _ignoreKeys(obj[key], keys) };
-    }, {});
+        return addElement(x, _ignoreKeys(obj[key]), key);
+    }, Array.isArray(obj) ? [] : {});
 };
+
+const addElement = (obj, elem, key) => {
+    if (Array.isArray(obj)) {
+        return [ ...obj, elem ];
+    } else {
+        return { ...obj, [key]: elem }
+    }
+}
 
 const cloneObject = obj => JSON.parse(JSON.stringify(obj));
 
-export const ignoreKeys = (message, keys) => _ignoreKeys(cloneObject(message), keys);
+export const ignoreKeys = (obj) => _ignoreKeys(cloneObject(obj));
 
 const cleanupKong = async () => {
     const results = await readKongApi(testAdminApi);
