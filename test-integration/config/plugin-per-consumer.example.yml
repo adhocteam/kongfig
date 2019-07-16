@@ -1,12 +1,10 @@
 consumers:
   - username: user-john
 
-apis:
+services:
   - name: mockbin-foo
     attributes:
-      upstream_url: http://mockbin.com
-      uris:
-        - /foo
+      url: http://mockbin.com
     plugins:
       - name: rate-limiting
         ensure: "present"
@@ -17,9 +15,7 @@ apis:
 
   - name: mockbin-bar
     attributes:
-      upstream_url: http://mockbin.com
-      uris:
-        - /bar
+      url: http://mockbin.com
 
 plugins:
   - name: rate-limiting
