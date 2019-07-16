@@ -130,7 +130,13 @@ export default async function execute(config, adminApi, logger = () => {}, remov
 }
 
 export function services(services = [], removeRoutes) {
-  return services.reduce((actions, service) => [...actions, _service(service), removeOldRoutes(service, removeRoutes), ..._serviceRoutes(service), ..._servicePlugins(service)], []);
+  return services.reduce((actions, service) => {
+    if (shouldBeRemoved(service)) {
+      return [...actions, removeOldRoutes(service, removeRoutes), ..._serviceRoutes(service), ..._servicePlugins(service), _service(service)]
+    } else {
+      return [...actions, _service(service), removeOldRoutes(service, removeRoutes), ..._serviceRoutes(service), ..._servicePlugins(service)]
+    }
+  }, []);
 }
 
 export function routes(serviceName, routes = []) {
@@ -703,7 +709,7 @@ function _routePlugins(serviceName, route) {
 }
 
 function _serviceRoutes(service) {
-  return service.routes && !shouldBeRemoved(service) ? routes(service.name, service.routes) : [];
+  return service.routes ? routes(service.name, service.routes) : [];
 }
 
 function _servicePlugins(service) {
