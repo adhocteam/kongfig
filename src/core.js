@@ -131,9 +131,19 @@ export default async function execute(config, adminApi, logger = () => {}, remov
 
 export function services(services = [], removeRoutes) {
   return services.reduce((actions, service) => {
+    // The _service function compares your service config with the current kong
+    // state, and determines what changes need to be made. It will add a remove-service
+    // action if the service has `ensure: removed`. If that happens before the routes
+    // are removed, kong will fail to remove the service, due to a foreign key constraint
+    // (the routes still reference the service).
     if (shouldBeRemoved(service)) {
-      return [...actions, removeOldRoutes(service, removeRoutes), ..._serviceRoutes(service), ..._servicePlugins(service), _service(service)]
-    } else {
+        return [...actions, removeOldRoutes(service, removeRoutes), ..._serviceRoutes(service), ..._servicePlugins(service), _service(service)]
+    }
+    // In the other case, where _service returns a create-service action, we need
+    // to create the service before adding any other entities that reference the
+    // service, or those actions will fail because they attempt to reference a
+    // nonexistent service.
+    else {
       return [...actions, _service(service), removeOldRoutes(service, removeRoutes), ..._serviceRoutes(service), ..._servicePlugins(service)]
     }
   }, []);
