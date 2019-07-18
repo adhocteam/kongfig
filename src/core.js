@@ -130,7 +130,23 @@ export default async function execute(config, adminApi, logger = () => {}, remov
 }
 
 export function services(services = [], removeRoutes) {
-  return services.reduce((actions, service) => [...actions, _service(service), removeOldRoutes(service, removeRoutes), ..._serviceRoutes(service), ..._servicePlugins(service)], []);
+  return services.reduce((actions, service) => {
+    // The _service function compares your service config with the current kong
+    // state, and determines what changes need to be made. It will add a remove-service
+    // action if the service has `ensure: removed`. If that happens before the routes
+    // are removed, kong will fail to remove the service, due to a foreign key constraint
+    // (the routes still reference the service).
+    if (shouldBeRemoved(service)) {
+        return [...actions, removeOldRoutes(service, removeRoutes), ..._serviceRoutes(service), ..._servicePlugins(service), _service(service)]
+    }
+    // In the other case, where _service returns a create-service action, we need
+    // to create the service before adding any other entities that reference the
+    // service, or those actions will fail because they attempt to reference a
+    // nonexistent service.
+    else {
+      return [...actions, _service(service), removeOldRoutes(service, removeRoutes), ..._serviceRoutes(service), ..._servicePlugins(service)]
+    }
+  }, []);
 }
 
 export function routes(serviceName, routes = []) {
@@ -641,7 +657,7 @@ function removeOldRoutes(service, removeRoutes) {
       return noop({ type: 'noop-skip-remove-routes', service });
     }
 
-    if (world.hasService) {
+    if (world.hasService(service.name)) {
       const oldService = world.getService(service.name);
       return oldService.routes
         .filter((route) => !(service.routes.find((r) => r.id === route.id)))
@@ -657,7 +673,7 @@ function _service(service) {
   validateServiceRequiredAttributes(service);
 
   return (world) => {
-    if (service.ensure == 'removed') {
+    if (shouldBeRemoved(service)) {
       return world.hasService(service.name) ? removeService(service.name) : noop({ type: 'noop-service', service });
     }
 
@@ -678,7 +694,7 @@ function _api(api) {
   validateApiRequiredAttributes(api);
 
   return migrateApiDefinition(api, (api, world) => {
-    if (api.ensure == 'removed') {
+    if (shouldBeRemoved(api)) {
       return world.hasApi(api.name) ? removeApi(api.name) : noop({ type: 'noop-api', api });
     }
 
@@ -695,19 +711,23 @@ function _api(api) {
 }
 
 function _apiPlugins(api) {
-  return api.plugins && api.ensure != 'removed' ? plugins(api.name, api.plugins) : [];
+  return api.plugins && !shouldBeRemoved(api) ? plugins(api.name, api.plugins) : [];
 }
 
 function _routePlugins(serviceName, route) {
-  return route.plugins && route.ensure != 'remove' ? routePlugins(serviceName, route.name, route.plugins) : [];
+  return route.plugins && !shouldBeRemoved(route) ? routePlugins(serviceName, route.name, route.plugins) : [];
 }
 
 function _serviceRoutes(service) {
-  return service.routes && service.ensure != 'remove' ? routes(service.name, service.routes) : [];
+  return service.routes ? routes(service.name, service.routes) : [];
 }
 
 function _servicePlugins(service) {
-  return service.plugins && service.ensure != 'remove' ? servicePlugins(service.name, service.plugins) : [];
+  return service.plugins && !shouldBeRemoved(service) ? servicePlugins(service.name, service.plugins) : [];
+}
+
+function shouldBeRemoved(entity) {
+  return entity.ensure === 'removed';
 }
 
 function validateEnsure(ensure) {
@@ -726,13 +746,14 @@ function validateServiceRequiredAttributes(service) {
   }
 
   if (!service.hasOwnProperty('attributes')) {
-    throw Error(`"${service.name}" api has to declare "host", "protocol", and "port" attributes`);
+    throw Error(`"${service.name}" service has to declare "host", "protocol", and "port" attributes or "url" attribute.`);
   }
 
-  if (!service.attributes.hasOwnProperty('port') ||
+  if ((!service.attributes.hasOwnProperty('port') ||
       !service.attributes.hasOwnProperty('host') ||
-      !service.attributes.hasOwnProperty('protocol')) {
-    throw Error(`"${service.name}" api has to declare "host", "protocol", and "port" attributes`);
+      !service.attributes.hasOwnProperty('protocol')) &&
+      !service.attributes.hasOwnProperty('url') ) {
+    throw Error(`"${service.name}" service has to declare "host", "protocol", and "port" attributes or "url" attribute.`);
   }
 }
 
@@ -779,7 +800,7 @@ function _route(serviceName, route) {
   validateEnsure(route.ensure);
 
   return world => {
-    if (route.ensure == 'removed') {
+    if (shouldBeRemoved(route)) {
       if (world.hasRoute(serviceName, route)) {
         return removeServiceRoute(world.getServiceId(serviceName), route);
       }
@@ -806,7 +827,7 @@ function _plugin(apiName, plugin) {
     const finalPlugin = swapConsumerReference(world, plugin);
     const consumerID = finalPlugin.attributes && finalPlugin.attributes.consumer_id;
 
-    if (plugin.ensure == 'removed') {
+    if (shouldBeRemoved(plugin)) {
       if (world.hasPlugin(apiName, plugin.name, consumerID)) {
         return removeApiPlugin(world.getApiId(apiName), world.getPluginId(apiName, plugin.name, consumerID));
       }
@@ -833,7 +854,7 @@ function _routePlugin(serviceName, routeName, plugin) {
     const finalPlugin = swapConsumerReference(world, plugin);
     const consumerID = finalPlugin.attributes && finalPlugin.attributes.consumer_id;
 
-    if (plugin.ensure == 'removed') {
+    if (shouldBeRemoved(plugin)) {
       if (world.hasRoutePlugin(serviceName, routeName, plugin.name, consumerID)) {
         return removeRoutePlugin(
           world.getServiceId(serviceName),
@@ -873,7 +894,7 @@ function _servicePlugin(serviceName, plugin) {
     const finalPlugin = swapConsumerReference(world, plugin);
     const consumerID = finalPlugin.attributes && finalPlugin.attributes.consumer_id;
 
-    if (plugin.ensure == 'removed') {
+    if (shouldBeRemoved(plugin)) {
       if (world.hasServicePlugin(serviceName, plugin.name, consumerID)) {
         return removeServicePlugin(world.getServiceId(serviceName), world.getServicePluginId(serviceName, plugin.name, consumerID));
       }
@@ -900,7 +921,7 @@ function _globalPlugin(plugin) {
     const finalPlugin = swapConsumerReference(world, plugin);
     const consumerID = finalPlugin.attributes && finalPlugin.attributes.consumer_id;
 
-    if (plugin.ensure == 'removed') {
+    if (shouldBeRemoved(plugin)) {
       if (world.hasGlobalPlugin(plugin.name, consumerID)) {
         return removeGlobalPlugin(world.getGlobalPluginId(plugin.name, consumerID));
       }
@@ -925,7 +946,7 @@ function _consumer(consumer) {
   validateConsumer(consumer);
 
   return world => {
-    if (consumer.ensure == 'removed') {
+    if (shouldBeRemoved(consumer)) {
       if (world.hasConsumer(consumer.username)) {
         return removeConsumer(world.getConsumerId(consumer.username));
       }
@@ -946,13 +967,13 @@ function _consumer(consumer) {
 
   let _credentials = [];
 
-  if (consumer.credentials && consumer.ensure != 'removed') {
+  if (consumer.credentials && !shouldBeRemoved(consumer)) {
     _credentials = consumerCredentials(consumer.username, consumer.credentials);
   }
 
   let _acls = [];
 
-  if (consumer.acls && consumer.ensure != 'removed') {
+  if (consumer.acls && !shouldBeRemoved(consumer)) {
     _acls = consumerAcls(consumer.username, consumer.acls);
   }
 
@@ -966,7 +987,7 @@ function validateConsumer({username}) {
 }
 
 function _consumerCredentials(consumer) {
-  if (!consumer.credentials || consumer.ensure == 'removed') {
+  if (!consumer.credentials || shouldBeRemoved(consumer)) {
     return [];
   }
 
@@ -978,7 +999,7 @@ function _consumerCredential(username, credential) {
   validateCredentialRequiredAttributes(credential);
 
   return world => {
-    if (credential.ensure == 'removed') {
+    if (shouldBeRemoved(credential)) {
       if (world.hasConsumerCredential(username, credential.name, credential.attributes)) {
         const credentialId = world.getConsumerCredentialId(username, credential.name, credential.attributes);
 
@@ -1025,7 +1046,7 @@ function validateAclRequiredAttributes(acl) {
 }
 
 function _consumerAcls(consumer) {
-  if (!consumer.acls || consumer.ensure == 'removed') {
+  if (!consumer.acls || shouldBeRemoved(consumer)) {
     return [];
   }
 
@@ -1038,7 +1059,7 @@ function _consumerAcl(username, acl) {
   validateAclRequiredAttributes(acl);
 
   return world => {
-    if (acl.ensure == 'removed') {
+    if (shouldBeRemoved(acl)) {
       if (world.hasConsumerAcl(username, acl.group)) {
         const aclId = world.getConsumerAclId(username, acl.group);
 
@@ -1061,7 +1082,7 @@ function _upstream(upstream) {
   validateUpstreamRequiredAttributes(upstream);
 
   return world => {
-    if (upstream.ensure == 'removed') {
+    if (shouldBeRemoved(upstream)) {
       if (world.hasUpstream(upstream.name)) {
         return removeUpstream(upstream.name)
       }
@@ -1085,7 +1106,7 @@ function _target(upstreamName, target) {
   validateEnsure(target.ensure);
 
   return world => {
-    if (target.ensure == 'removed' || (target.attributes && target.attributes.weight === 0)) {
+    if (shouldBeRemoved(target) || (target.attributes && target.attributes.weight === 0)) {
       if (world.hasUpstreamTarget(upstreamName, target.target)) {
         return removeUpstreamTarget(world.getUpstreamId(upstreamName), target.target);
       }
@@ -1106,7 +1127,7 @@ function _target(upstreamName, target) {
 }
 
 function _upstreamTargets(upstream) {
-  return upstream.targets && upstream.ensure != 'removed' ? targets(upstream.name, upstream.targets) : [];
+  return upstream.targets && !shouldBeRemoved(upstream) ? targets(upstream.name, upstream.targets) : [];
 }
 
 function validateUpstreamRequiredAttributes(upstream) {
@@ -1121,7 +1142,7 @@ const _certificate = certificate => {
   return world => {
     const identityClue = certificate.key.substr(1, 50);
 
-    if (certificate.ensure == 'removed') {
+    if (shouldBeRemoved(certificate)) {
       if (world.hasCertificate(certificate)) {
         return removeCertificate(world.getCertificateId(certificate));
       }
@@ -1149,7 +1170,7 @@ const _sni = (certificate, sni) => {
     const currentSNIs = world.getCertificateSNIs(certificate).map(x => x.name);
     const hasSNI = currentSNIs.indexOf(sni.name) !== -1;
 
-    if (sni.ensure == 'removed') {
+    if (shouldBeRemoved(sni)) {
       if (hasSNI) {
         return removeCertificateSNI(sni.name);
       }

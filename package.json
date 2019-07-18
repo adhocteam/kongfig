@@ -37,15 +37,15 @@
     "uuid": "^3.3.2"
   },
   "devDependencies": {
-    "@babel/plugin-proposal-object-rest-spread": "^7.3.1",
     "@babel/cli": "^7.0.0",
     "@babel/core": "^7.0.0",
-    "babel-jest": "^24.0.0",
+    "@babel/plugin-proposal-object-rest-spread": "^7.3.1",
+    "babel-jest": "^24.8.0",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-preset-env": "^1.7.0",
     "expect.js": "^0.3.1",
-    "jest": "^24.0.0",
-    "jest-cli": "^24.0.0"
+    "jest": "^24.8.0",
+    "jest-cli": "^24.8.0"
   },
   "jest": {
     "setupFiles": [
