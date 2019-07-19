@@ -174,8 +174,7 @@ Array [
 `;
 
 exports[`should apply certificates.example.yml 2`] = `
-"apis: []
-services: []
+"services: []
 consumers: []
 plugins: []
 upstreams: []
@@ -425,8 +424,7 @@ Array [
 `;
 
 exports[`should apply consumer.example.yml 2`] = `
-"apis: []
-services: []
+"services: []
 consumers:
   - username: iphone-app
     custom_id: null
@@ -531,8 +529,7 @@ Array [
 `;
 
 exports[`should apply global-plugin.example.yml 2`] = `
-"apis: []
-services: []
+"services: []
 consumers: []
 plugins:
   - name: cors
@@ -858,8 +855,7 @@ Array [
 `;
 
 exports[`should apply key-auth.example.yml 2`] = `
-"apis: []
-services:
+"services:
   - name: mockbin
     plugins:
       - name: key-auth
@@ -1305,8 +1301,7 @@ Array [
 `;
 
 exports[`should apply key-auth-anonymous.example.yml 2`] = `
-"apis: []
-services:
+"services:
   - name: mockbin
     plugins:
       - name: key-auth
@@ -1890,8 +1885,7 @@ Array [
 `;
 
 exports[`should apply plugin-per-consumer.example.yml 2`] = `
-"apis: []
-services:
+"services:
   - name: mockbin-bar
     plugins: []
     routes: []
@@ -2251,8 +2245,7 @@ Array [
 `;
 
 exports[`should apply service-route.example.yml 2`] = `
-"apis: []
-services:
+"services:
   - name: mockbin
     plugins: []
     routes:
@@ -2557,8 +2550,7 @@ Array [
 `;
 
 exports[`should apply upstreams-and-targets.example.yml 2`] = `
-"apis: []
-services: []
+"services: []
 consumers: []
 plugins: []
 upstreams:

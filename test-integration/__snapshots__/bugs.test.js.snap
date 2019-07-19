@@ -76,8 +76,7 @@ Array [
 `;
 
 exports[`should allow updating a global plugin with no attributes 2`] = `
-"apis: []
-services: []
+"services: []
 consumers: []
 plugins:
   - name: cors
