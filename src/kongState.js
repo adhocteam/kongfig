@@ -76,7 +76,7 @@ export default async (adminApi) => {
 
     }));
 
-    const allPlugins = await adminApi.fetchGlobalPlugins();
+    const allPlugins = await adminApi.fetchAllPlugins();
     const globalPlugins = allPlugins.filter(plugin => {
         return plugin.service_id === undefined && plugin.route_id === undefined;
     });

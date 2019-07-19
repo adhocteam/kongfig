@@ -20,7 +20,7 @@ export default ({host, https, ignoreConsumers, cache}) => {
 function createApi({ router, getPaginatedJson, ignoreConsumers }) {
     return {
         router,
-        fetchGlobalPlugins: () => getPaginatedJson(router({name: 'plugins'})),
+        fetchAllPlugins: () => getPaginatedJson(router({name: 'plugins'})),
         fetchConsumers: () => ignoreConsumers ? Promise.resolve([]) : getPaginatedJson(router({name: 'consumers'})),
         fetchConsumerCredentials: (consumerId, plugin) => getPaginatedJson(router({name: 'consumer-credentials', params: {consumerId, plugin}})),
         fetchConsumerAcls: (consumerId) => getPaginatedJson(router({name: 'consumer-acls', params: {consumerId}})),
