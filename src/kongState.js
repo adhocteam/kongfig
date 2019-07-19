@@ -79,7 +79,7 @@ export default async (adminApi) => {
 
     const allPlugins = await adminApi.fetchAllPlugins();
     const globalPlugins = allPlugins.filter(plugin => {
-        return getForeignEntityID(plugin, 'service') === undefined && getForeignEntityID(plugin, 'route') === undefined;
+        return !getForeignEntityID(plugin, 'service') && !getForeignEntityID(plugin, 'route');
     });
 
     const upstreamsWithTargets = await fetchUpstreamsWithTargets({

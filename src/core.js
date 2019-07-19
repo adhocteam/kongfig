@@ -3,6 +3,7 @@
 import colors from 'colors';
 import assign from 'object-assign';
 import invariant from 'invariant';
+import semVer from 'semver';
 import readKongApi from './readKongApi';
 import {getSchema as getConsumerCredentialSchema} from './consumerCredentials';
 import {normalize as normalizeAttributes, getForeignEntityID} from './utils';
@@ -691,6 +692,11 @@ const swapConsumerReference = (world, plugin) => {
     const consumer_id = world.getConsumerId(username);
 
     newPluginDef = { ...plugin, attributes: { consumer_id, ...attributes } };
+  }
+
+  if (semVer.gte(world.getVersion(), '1.0.0') && newPluginDef.attributes.consumer_id) {
+    newPluginDef.attributes.consumer = { id: newPluginDef.attributes.consumer_id }
+    delete newPluginDef.attributes.consumer_id
   }
 
   return newPluginDef;
