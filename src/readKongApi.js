@@ -11,7 +11,7 @@ export default async (adminApi, config) => {
                 _info: { version },
                 services: parseServices(state.services, version, config),
                 consumers: parseConsumers(state.consumers),
-                plugins: parseGlobalPlugins(state.plugins),
+                plugins: parseGlobalPlugins(state.plugins, version),
                 upstreams: semVer.gte(version, '0.10.0') ? parseUpstreams(state.upstreams) : undefined,
                 certificates: semVer.gte(version, '0.10.0') ? parseCertificates(state.certificates) : undefined,
             });
@@ -59,32 +59,43 @@ function parseCredential([credentialName, credentials]) {
 }
 
 
-export const parsePlugin = ({
-    name,
-    config,
-    id, consumer_id, enabled, created_at
-}) => {
-    return {
+export const parsePlugin = (plugin, version) => {
+    const {
+        name,
+        config,
+        id,
+        enabled,
+        created_at
+    } = plugin
+
+    let parsed = {
         name,
         attributes: {
             enabled,
-            consumer_id,
             config: stripConfig(config)
         },
         _info: {
             id,
-            consumer_id,
             created_at
         }
-    };
+    }
+    if (semVer.gte(version, '1.0.0')) {
+        parsed.attributes.consumer = plugin.consumer
+        parsed._info.consumer = plugin.consumer
+    } else {
+        parsed._info.consumer_id = plugin.consumer_id
+        parsed.attributes.consumer_id = plugin.consumer_id
+    }
+
+    return parsed
 };
 
-function parseServiceOrRoutePlugins(plugins) {
+function parseServiceOrRoutePlugins(plugins, version) {
     if (!Array.isArray(plugins)) {
       return [];
     }
 
-    return plugins.map(parsePlugin);
+    return plugins.map(plugin => parsePlugin(plugin, version));
 }
 
 export function parseRoute({ id, created_at, updated_at, service, ...rest }, serviceName = '', config = {}) {
@@ -134,40 +145,19 @@ function parseServices(services, version, config = {}) {
     if (semVer.gte(version, '0.13.0')) {
         return services.map(({ plugins, routes, ...service }) => {
             const { name, ...rest } = parseService(service);
-            return { name, plugins: parseServiceOrRoutePlugins(plugins), routes: parseRoutes(routes, name, config), ...rest };
+            return { name, plugins: parseServiceOrRoutePlugins(plugins, version), routes: parseRoutes(routes, name, config), ...rest };
         });
     }
     return [];
 }
 
-export const parseGlobalPlugin = ({
-    name,
-    enabled,
-    config,
-    id, consumer_id, created_at
-}) => {
-    return {
-        name,
-        attributes: {
-            enabled,
-            consumer_id,
-            config: stripConfig(config)
-        },
-        _info: {
-            id,
-            consumer_id,
-            created_at
-        }
-    };
-};
-
-function parseGlobalPlugins(plugins) {
+function parseGlobalPlugins(plugins, version) {
     if (!Array.isArray(plugins)) {
       return [];
     }
 
     return plugins
-        .map(parseGlobalPlugin)
+        .map(plugin => parsePlugin(plugin, version))
         .filter(x => x.name);
 }
 

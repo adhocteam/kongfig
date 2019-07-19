@@ -6,7 +6,7 @@ import services from './services';
 
 const combine = reducers => (state = {}, log) => {
     return Object.keys(reducers).reduce((nextState, key) => {
-        nextState[key] = reducers[key](state[key], log);
+        nextState[key] = reducers[key](state[key], log, state._info && state._info.version);
 
         return nextState;
     }, state);
