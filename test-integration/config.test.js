@@ -4,14 +4,28 @@ import readKongApi from '../src/readKongApi';
 import { configLoader } from '../src/configLoader';
 import fs from 'fs';
 import path from 'path';
+import 'core-js/features/object/from-entries';
 
 beforeEach(tearDown);
 jest.setTimeout(10000);
 
+const sortObjectProperties = obj => {
+    return Object.fromEntries(Object.entries(obj)
+        .sort(([k1, v1], [k2, v2]) => {
+            k1 > k2 ? 1 : -1;
+        })
+    );
+}
+
 const ignoreConfigOrder = state => ({
     ...state,
     consumers: state.consumers.sort((a, b) => a.username > b.username ? 1 : -1),
-    plugins: state.plugins.sort((a, b) => a.attributes.config.minute - b.attributes.config.minute),
+    plugins: state.plugins
+        .sort((a, b) => a.attributes.config.minute - b.attributes.config.minute)
+        .map(plugin => ({
+            ...plugin,
+            attributes: sortObjectProperties(plugin.attributes),
+        })),
     upstreams: state.upstreams.map(upstream => ({
         ...upstream,
         targets: upstream.targets.sort((a, b) => a.target > b.target ? 1 : -1),
