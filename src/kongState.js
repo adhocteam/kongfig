@@ -1,5 +1,6 @@
 import semVer from 'semver';
 import {getSupportedCredentials} from './consumerCredentials';
+import { getForeignEntityID } from './utils';
 
 const fetchUpstreamsWithTargets = async ({ version, fetchUpstreams, fetchTargets }) => {
     if (semVer.lte(version, '0.10.0')) {
@@ -78,7 +79,7 @@ export default async (adminApi) => {
 
     const allPlugins = await adminApi.fetchAllPlugins();
     const globalPlugins = allPlugins.filter(plugin => {
-        return plugin.service_id === undefined && plugin.route_id === undefined;
+        return getForeignEntityID(plugin, 'service') === undefined && getForeignEntityID(plugin, 'route') === undefined;
     });
 
     const upstreamsWithTargets = await fetchUpstreamsWithTargets({
