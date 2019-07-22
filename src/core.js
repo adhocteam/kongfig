@@ -6,7 +6,7 @@ import invariant from 'invariant';
 import semVer from 'semver';
 import readKongApi from './readKongApi';
 import {getSchema as getConsumerCredentialSchema} from './consumerCredentials';
-import {normalize as normalizeAttributes, getForeignEntityID} from './utils';
+import {normalize as normalizeAttributes, getAssociatedEntityID} from './utils';
 import { logReducer } from './kongStateLocal';
 import getCurrentStateSelector from './stateSelector';
 import diff from './diff';
@@ -565,7 +565,7 @@ function _createWorld({consumers, plugins, upstreams, services, certificates, _i
 }
 
 function pluginTargetsConsumer(plugin, consumerID) {
-  return getForeignEntityID(plugin._info, 'consumer') == consumerID;
+  return getAssociatedEntityID(plugin._info, 'consumer') == consumerID;
 }
 
 function isAttributesWithConfigUpToDate(defined, current) {
@@ -731,7 +731,7 @@ function _routePlugin(serviceName, routeName, plugin) {
 
   return world => {
     const finalPlugin = swapConsumerReference(world, plugin);
-    const consumerID = finalPlugin.attributes && getForeignEntityID(finalPlugin.attributes, 'consumer');
+    const consumerID = finalPlugin.attributes && getAssociatedEntityID(finalPlugin.attributes, 'consumer');
 
     if (shouldBeRemoved(plugin)) {
       if (world.hasRoutePlugin(serviceName, routeName, plugin.name, consumerID)) {
@@ -771,7 +771,7 @@ function _servicePlugin(serviceName, plugin) {
 
   return world => {
     const finalPlugin = swapConsumerReference(world, plugin);
-    const consumerID = finalPlugin.attributes && getForeignEntityID(finalPlugin.attributes, 'consumer');
+    const consumerID = finalPlugin.attributes && getAssociatedEntityID(finalPlugin.attributes, 'consumer');
 
     if (shouldBeRemoved(plugin)) {
       if (world.hasServicePlugin(serviceName, plugin.name, consumerID)) {
@@ -798,7 +798,7 @@ function _globalPlugin(plugin) {
 
   return world => {
     const finalPlugin = swapConsumerReference(world, plugin);
-    const consumerID = finalPlugin.attributes && getForeignEntityID(finalPlugin.attributes, 'consumer');
+    const consumerID = finalPlugin.attributes && getAssociatedEntityID(finalPlugin.attributes, 'consumer');
 
     if (shouldBeRemoved(plugin)) {
       if (world.hasGlobalPlugin(plugin.name, consumerID)) {

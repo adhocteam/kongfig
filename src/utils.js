@@ -64,6 +64,6 @@ export function parseVersion(version) {
 
 // Kong 1.x changes these references from plugin.${entity}_id to
 // plugin.${entity}.id. This function enables us to support both formats.
-export function getForeignEntityID(primary, entityType) {
+export function getAssociatedEntityID(primary, entityType) {
     return primary[`${entityType}_id`] || (primary[entityType] && primary[entityType].id)
 }
