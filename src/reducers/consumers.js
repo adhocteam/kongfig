@@ -1,4 +1,4 @@
-import { parseApiPostV10, parsePlugin, parseConsumer, parseAcl, parseGlobalPlugin } from '../readKongApi';
+import { parseConsumer, parseAcl } from '../readKongApi';
 
 
 const acls = (state, log) => {

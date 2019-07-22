@@ -9,7 +9,6 @@ export default async (adminApi, config) => {
         .then(([state, schemas, version]) => {
             return getCurrentStateSelector({
                 _info: { version },
-                apis: parseApis(state.apis, version),
                 services: parseServices(state.services, version, config),
                 consumers: parseConsumers(state.consumers),
                 plugins: parseGlobalPlugins(state.plugins),
@@ -59,82 +58,11 @@ function parseCredential([credentialName, credentials]) {
     });
 }
 
-function parseApis(apis, kongVersion) {
-    if (semVer.gte(kongVersion, '0.10.0')) {
-        return parseApisV10(apis);
-    }
-
-    return parseApisBeforeV10(apis);
-}
-
-const parseApiPreV10 = ({
-    name,
-    request_host, request_path, strip_request_path, preserve_host, upstream_url,
-    id, created_at}) => {
-    return {
-        name,
-        plugins: [],
-        attributes: {
-            request_host,
-            request_path,
-            strip_request_path,
-            preserve_host,
-            upstream_url,
-        },
-        _info: {
-            id,
-            created_at
-        }
-    };
-};
-
-export const parseApiPostV10 = ({
-    name, plugins,
-    hosts, uris, methods,
-    strip_uri, preserve_host, upstream_url, id, created_at,
-    https_only, http_if_terminated,
-    retries, upstream_connect_timeout, upstream_read_timeout, upstream_send_timeout}) => {
-    return {
-        name,
-        attributes: {
-            hosts,
-            uris,
-            methods,
-            strip_uri,
-            preserve_host,
-            upstream_url,
-            retries,
-            upstream_connect_timeout,
-            upstream_read_timeout,
-            upstream_send_timeout,
-            https_only,
-            http_if_terminated
-        },
-        _info: {
-            id,
-            created_at
-        }
-    };
-};
-
-const withParseApiPlugins = (parseApi) => api => {
-    const { name, ...rest} = parseApi(api);
-
-    return { name, plugins: parseApiPlugins(api.plugins), ...rest };
-};
-
-function parseApisBeforeV10(apis) {
-    return apis.map(withParseApiPlugins(parseApiPreV10));
-}
-
-function parseApisV10(apis) {
-    return apis.map(withParseApiPlugins(parseApiPostV10));
-}
 
 export const parsePlugin = ({
     name,
     config,
-    id, api_id, consumer_id, enabled, created_at
+    id, consumer_id, enabled, created_at
 }) => {
     return {
         name,
@@ -145,14 +73,13 @@ export const parsePlugin = ({
         },
         _info: {
             id,
-            //api_id,
             consumer_id,
             created_at
         }
     };
 };
 
-function parseApiPlugins(plugins) {
+function parseServiceOrRoutePlugins(plugins) {
     if (!Array.isArray(plugins)) {
       return [];
     }
@@ -175,7 +102,7 @@ export function parseRoute({ id, created_at, updated_at, service, ...rest }, ser
 function parseRoutes(routes, serviceName= '', config = {}) {
     return routes.map(({ plugins, ...route }) => {
         const { id, ...rest } = parseRoute(route, serviceName, config);
-        return { id, plugins: parseApiPlugins(plugins), ...rest };
+        return { id, plugins: parseServiceOrRoutePlugins(plugins), ...rest };
     });
 }
 
@@ -207,7 +134,7 @@ function parseServices(services, version, config = {}) {
     if (semVer.gte(version, '0.13.0')) {
         return services.map(({ plugins, routes, ...service }) => {
             const { name, ...rest } = parseService(service);
-            return { name, plugins: parseApiPlugins(plugins), routes: parseRoutes(routes, name, config), ...rest };
+            return { name, plugins: parseServiceOrRoutePlugins(plugins), routes: parseRoutes(routes, name, config), ...rest };
         });
     }
     return [];
@@ -217,7 +144,7 @@ export const parseGlobalPlugin = ({
     name,
     enabled,
     config,
-    id, api_id, consumer_id, created_at
+    id, consumer_id, created_at
 }) => {
     return {
         name,
@@ -228,7 +155,6 @@ export const parseGlobalPlugin = ({
         },
         _info: {
             id,
-            api_id,
             consumer_id,
             created_at
         }

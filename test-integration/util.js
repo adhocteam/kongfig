@@ -88,7 +88,6 @@ export const ignoreKeys = (obj) => _ignoreKeys(cloneObject(obj));
 const cleanupKong = async () => {
     const results = await readKongApi(testAdminApi);
     await execute({
-        apis: results.apis.map(api => ({ ...api, ensure: 'removed' })),
         consumers: results.consumers.map(consumer => ({ ...consumer, ensure: 'removed' })),
         plugins: results.plugins.map(plugin => ({ ...plugin, ensure: 'removed' })),
         upstreams: results.upstreams.map(upstream => ({ ...upstream, ensure: 'removed' })),

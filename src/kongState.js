@@ -27,13 +27,6 @@ const fetchCertificatesForVersion = async ({ version, fetchCertificates }) => {
 
 export default async (adminApi) => {
     const version = await adminApi.fetchKongVersion();
-    const apis = await adminApi.fetchApis();
-    const apisWithPlugins = await Promise.all(apis.map(async item => {
-        const plugins =  await adminApi.fetchPlugins(item.id);
-
-        return {...item, plugins};
-    }));
-
     let servicesWithPluginsAndRoutes = [];
 
     if (semVer.gte(version, '0.13.0')) {
@@ -83,9 +76,9 @@ export default async (adminApi) => {
 
     }));
 
-    const allPlugins = await adminApi.fetchGlobalPlugins();
+    const allPlugins = await adminApi.fetchAllPlugins();
     const globalPlugins = allPlugins.filter(plugin => {
-        return plugin.api_id === undefined && plugin.service_id === undefined && plugin.route_id === undefined;
+        return plugin.service_id === undefined && plugin.route_id === undefined;
     });
 
     const upstreamsWithTargets = await fetchUpstreamsWithTargets({
@@ -97,7 +90,6 @@ export default async (adminApi) => {
 
     return {
         services: servicesWithPluginsAndRoutes,
-        apis: apisWithPlugins,
         consumers: consumersWithCredentialsAndAcls,
         plugins: globalPlugins,
         upstreams: upstreamsWithTargets,

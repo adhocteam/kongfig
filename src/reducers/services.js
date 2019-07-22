@@ -1,4 +1,4 @@
-import { parseService, parseRoute, parsePlugin, parseConsumer, parseAcl, parseGlobalPlugin } from '../readKongApi';
+import { parseService, parseRoute, parsePlugin } from '../readKongApi';
 
 const plugins = (state, log) => {
   const { params: { type, endpoint: { params, body } }, content } = log;
