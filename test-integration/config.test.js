@@ -9,6 +9,10 @@ import 'core-js/features/object/from-entries';
 beforeEach(tearDown);
 jest.setTimeout(10000);
 
+// This depends on ES2015's guarantee that object properties are stored
+// and returned in the order they were created. This isn't guaranteed in
+// older versions of the spec, but the node.js implementation has always
+// worked that way.
 const sortObjectProperties = obj => {
     return Object.fromEntries(Object.entries(obj)
         .sort(([k1, v1], [k2, v2]) => {
