@@ -110,10 +110,10 @@ export function parseRoute({ id, created_at, updated_at, service, ...rest }, ser
     return { name: (name || id), id, attributes: {...rest}, _info: { id, updated_at, created_at } };
 }
 
-function parseRoutes(routes, serviceName= '', config = {}) {
+function parseRoutes(routes, serviceName= '', config = {}, version) {
     return routes.map(({ plugins, ...route }) => {
         const { id, ...rest } = parseRoute(route, serviceName, config);
-        return { id, plugins: parseServiceOrRoutePlugins(plugins), ...rest };
+        return { id, plugins: parseServiceOrRoutePlugins(plugins, version), ...rest };
     });
 }
 
@@ -145,7 +145,7 @@ function parseServices(services, version, config = {}) {
     if (semVer.gte(version, '0.13.0')) {
         return services.map(({ plugins, routes, ...service }) => {
             const { name, ...rest } = parseService(service);
-            return { name, plugins: parseServiceOrRoutePlugins(plugins, version), routes: parseRoutes(routes, name, config), ...rest };
+            return { name, plugins: parseServiceOrRoutePlugins(plugins, version), routes: parseRoutes(routes, name, config, version), ...rest };
         });
     }
     return [];
