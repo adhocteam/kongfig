@@ -1,10 +1,21 @@
 services:
-  - name: "mockbin"
-    ensure: "present"
+  - name: mockbin
     attributes:
-      url: "http://mockbin.com"
+      url: http://mockbin.com
+    plugins:
+      - name: rate-limiting
+        attributes:
+          enabled: true
+          config:
+            minute: 60
     routes:
       - name: mockbin
         attributes:
           paths:
             - /mockbin
+        plugins:
+          - name: rate-limiting
+            attributes:
+              enabled: true
+              config:
+                minute: 30
