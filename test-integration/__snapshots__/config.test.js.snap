@@ -2040,7 +2040,6 @@ exports[`should apply plugin-per-consumer.example.yml 2`] = `
       - name: rate-limiting
         attributes:
           enabled: true
-          consumer_id: 2b47ba9b-761a-492d-9a0c-000000000001
           config:
             second: 10
             redis_database: 0
@@ -2050,6 +2049,7 @@ exports[`should apply plugin-per-consumer.example.yml 2`] = `
             redis_port: 6379
             limit_by: consumer
             fault_tolerant: true
+          consumer_id: 2b47ba9b-761a-492d-9a0c-000000000001
     routes: []
     attributes:
       host: mockbin.com

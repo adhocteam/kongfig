@@ -3,9 +3,10 @@
 import colors from 'colors';
 import assign from 'object-assign';
 import invariant from 'invariant';
+import semVer from 'semver';
 import readKongApi from './readKongApi';
 import {getSchema as getConsumerCredentialSchema} from './consumerCredentials';
-import {normalize as normalizeAttributes} from './utils';
+import {normalize as normalizeAttributes, getAssociatedEntityID} from './utils';
 import { logReducer } from './kongStateLocal';
 import getCurrentStateSelector from './stateSelector';
 import diff from './diff';
@@ -287,28 +288,28 @@ function _createWorld({consumers, plugins, upstreams, services, certificates, _i
       return id;
     },
     getGlobalPlugin: (pluginName, pluginConsumerID) => {
-      const plugin = plugins.find(plugin => plugin.name === pluginName && plugin._info.consumer_id == pluginConsumerID);
+      const plugin = plugins.find(plugin => plugin.name === pluginName && pluginTargetsConsumer(plugin, pluginConsumerID));
 
       invariant(plugin, `Unable to find global plugin ${pluginName} for consumer ${pluginConsumerID}`);
 
       return plugin;
     },
     getServicePlugin: (serviceName, pluginName, pluginConsumerID) => {
-      const plugin = world.getService(serviceName).plugins.find(plugin => plugin.name == pluginName && plugin._info.consumer_id == pluginConsumerID);
+      const plugin = world.getService(serviceName).plugins.find(plugin => plugin.name == pluginName && pluginTargetsConsumer(plugin, pluginConsumerID));
 
       invariant(plugin, `Unable to find plugin ${pluginName}`);
 
       return plugin;
     },
     getRoutePluginId: (serviceName, routeName, pluginName, pluginConsumerID) => {
-      const pluginId = world.getServiceRoute(serviceName, routeName).plugins.find(plugin => plugin.name == pluginName && plugin._info.consumer_id == pluginConsumerID)._info.id;
+      const pluginId = world.getServiceRoute(serviceName, routeName).plugins.find(plugin => plugin.name == pluginName && pluginTargetsConsumer(plugin, pluginConsumerID))._info.id;
 
       invariant(pluginId, `Route plugin ${pluginName} doesn't have an id`);
 
       return pluginId;
     },
     getRoutePlugin: (serviceName, routeName, pluginName, pluginConsumerID) => {
-      const plugin = world.getServiceRoute(serviceName, routeName).plugins.find(plugin => plugin.name == pluginName && plugin._info.consumer_id == pluginConsumerID);
+      const plugin = world.getServiceRoute(serviceName, routeName).plugins.find(plugin => plugin.name == pluginName && pluginTargetsConsumer(plugin, pluginConsumerID));
 
       invariant(plugin, `Unable to find plugin ${pluginName}`);
 
@@ -333,13 +334,13 @@ function _createWorld({consumers, plugins, upstreams, services, certificates, _i
     },
     hasRoutePlugin: (serviceName, routeName, pluginName, pluginConsumerID) => {
       const route = world.getServiceRoute(serviceName, routeName);
-      return Array.isArray(route.plugins) && route.plugins.some(plugin => plugin.name == pluginName && plugin._info.consumer_id == pluginConsumerID);
+      return Array.isArray(route.plugins) && route.plugins.some(plugin => plugin.name == pluginName && pluginTargetsConsumer(plugin, pluginConsumerID));
     },
     hasServicePlugin: (serviceName, pluginName, pluginConsumerID) => {
-      return Array.isArray(services) && services.some(service => service.name === serviceName && Array.isArray(service.plugins) && service.plugins.some(plugin => plugin.name == pluginName && plugin._info.consumer_id == pluginConsumerID));
+      return Array.isArray(services) && services.some(service => service.name === serviceName && Array.isArray(service.plugins) && service.plugins.some(plugin => plugin.name == pluginName && pluginTargetsConsumer(plugin, pluginConsumerID)));
     },
     hasGlobalPlugin: (pluginName, pluginConsumerID) => {
-      return Array.isArray(plugins) && plugins.some(plugin => plugin.name === pluginName && plugin._info.consumer_id === pluginConsumerID);
+      return Array.isArray(plugins) && plugins.some(plugin => plugin.name === pluginName && pluginTargetsConsumer(plugin, pluginConsumerID));
     },
     hasConsumer: (username) => {
       return Array.isArray(consumers) && consumers.some(consumer => consumer.username === username);
@@ -563,6 +564,10 @@ function _createWorld({consumers, plugins, upstreams, services, certificates, _i
   return world;
 }
 
+function pluginTargetsConsumer(plugin, consumerID) {
+  return getAssociatedEntityID(plugin._info, 'consumer') == consumerID;
+}
+
 function isAttributesWithConfigUpToDate(defined, current) {
   const excludingConfig = ({ config, ...rest }) => rest;
 
@@ -689,6 +694,11 @@ const swapConsumerReference = (world, plugin) => {
     newPluginDef = { ...plugin, attributes: { consumer_id, ...attributes } };
   }
 
+  if (semVer.gte(world.getVersion(), '1.0.0') && newPluginDef.attributes.consumer_id) {
+    newPluginDef.attributes.consumer = { id: newPluginDef.attributes.consumer_id }
+    delete newPluginDef.attributes.consumer_id
+  }
+
   return newPluginDef;
 };
 
@@ -721,7 +731,7 @@ function _routePlugin(serviceName, routeName, plugin) {
 
   return world => {
     const finalPlugin = swapConsumerReference(world, plugin);
-    const consumerID = finalPlugin.attributes && finalPlugin.attributes.consumer_id;
+    const consumerID = finalPlugin.attributes && getAssociatedEntityID(finalPlugin.attributes, 'consumer');
 
     if (shouldBeRemoved(plugin)) {
       if (world.hasRoutePlugin(serviceName, routeName, plugin.name, consumerID)) {
@@ -761,7 +771,7 @@ function _servicePlugin(serviceName, plugin) {
 
   return world => {
     const finalPlugin = swapConsumerReference(world, plugin);
-    const consumerID = finalPlugin.attributes && finalPlugin.attributes.consumer_id;
+    const consumerID = finalPlugin.attributes && getAssociatedEntityID(finalPlugin.attributes, 'consumer');
 
     if (shouldBeRemoved(plugin)) {
       if (world.hasServicePlugin(serviceName, plugin.name, consumerID)) {
@@ -788,7 +798,7 @@ function _globalPlugin(plugin) {
 
   return world => {
     const finalPlugin = swapConsumerReference(world, plugin);
-    const consumerID = finalPlugin.attributes && finalPlugin.attributes.consumer_id;
+    const consumerID = finalPlugin.attributes && getAssociatedEntityID(finalPlugin.attributes, 'consumer');
 
     if (shouldBeRemoved(plugin)) {
       if (world.hasGlobalPlugin(plugin.name, consumerID)) {

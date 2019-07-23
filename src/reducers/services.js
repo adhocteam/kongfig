@@ -1,19 +1,19 @@
 import { parseService, parseRoute, parsePlugin } from '../readKongApi';
 
-const plugins = (state, log) => {
+const plugins = (state, log, version) => {
   const { params: { type, endpoint: { params, body } }, content } = log;
 
   switch (type) {
 
   case 'add-route-plugin':
-  case 'add-service-plugin': return [ ...state, parsePlugin(content) ];
+  case 'add-service-plugin': return [ ...state, parsePlugin(content, version) ];
   case 'update-route-plugin':
   case 'update-service-plugin': return state.map(state => {
     if (state._info.id !== content.id) {
       return state;
     }
 
-    return parsePlugin(content);
+    return parsePlugin(content, version);
   });
   case 'remove-route-plugin':
   case 'remove-service-plugin': return state.filter(plugin => plugin._info.id !== params.pluginId);
@@ -34,7 +34,7 @@ const routes = (state, log) => {
       ...state,
       {
         ...route,
-        plugins: plugins(route.plugins, log)
+        plugins: plugins(route.plugins, log, version)
       }
     ];
   case 'add-service-route':
@@ -56,7 +56,7 @@ const routes = (state, log) => {
   }
 };
 
-const service = (state, log) => {
+const service = (state, log, version) => {
   const { params: { type, endpoint: { params, body } }, content } = log;
 
   switch (type) {
@@ -87,7 +87,7 @@ const service = (state, log) => {
 
     return {
       ...state,
-      routes: routes(state.routes, log)
+      routes: routes(state.routes, log, version)
     };
 
   case 'add-service-plugin':
@@ -99,14 +99,14 @@ const service = (state, log) => {
 
     return {
       ...state,
-      plugins: plugins(state.plugins, log)
+      plugins: plugins(state.plugins, log, version)
     };
 
   default: return state;
   }
 };
 
-export default (state = [], log) => {
+export default (state = [], log, version) => {
   if (log.type !== 'response') {
     return state;
   }
@@ -114,7 +114,7 @@ export default (state = [], log) => {
   const { params: { type, endpoint: { params } }, content } = log;
 
   switch (type) {
-  case 'create-service': return [...state, service(undefined, log)];
+  case 'create-service': return [...state, service(undefined, log, version)];
   case 'remove-service': return state.filter(service => service.name !== params.name);
 
   case 'update-route-plugin':
@@ -126,7 +126,7 @@ export default (state = [], log) => {
   case 'remove-service-route':
   case 'add-service-plugin':
   case 'update-service-plugin':
-  case 'remove-service-plugin': return state.map(state => service(state, log));
+  case 'remove-service-plugin': return state.map(state => service(state, log, version));
 
   default: return state;
   }
