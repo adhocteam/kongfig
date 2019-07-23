@@ -21,7 +21,7 @@ const plugins = (state, log, version) => {
   }
 };
 
-const routes = (state, log) => {
+const routes = (state, log, version) => {
   const { params: { type, endpoint: { params, body } }, content } = log;
 
   switch (type) {
