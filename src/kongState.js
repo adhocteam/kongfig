@@ -35,6 +35,7 @@ export default async (adminApi) => {
     }));
 
     let servicesWithPluginsAndRoutes = [];
+
     if (semVer.gte(version, '0.13.0')) {
         const services = await adminApi.fetchServices();
         servicesWithPluginsAndRoutes = await Promise.all(services.map(async item => {
@@ -84,10 +85,7 @@ export default async (adminApi) => {
 
     const allPlugins = await adminApi.fetchGlobalPlugins();
     const globalPlugins = allPlugins.filter(plugin => {
-        isKongVersion1 = semVer.gte(version, '1.0.0');
-        const serviceId = isKongVersion1 ? (plugin.service || {}).id : plugin.service_id;
-        const routeId = isKongVersion1 ? (plugin.route || {}).id : plugin.route_id;
-        return serviceId === undefined && routeId === undefined;
+        return plugin.api_id === undefined && plugin.service_id === undefined && plugin.route_id === undefined;
     });
 
     const upstreamsWithTargets = await fetchUpstreamsWithTargets({
