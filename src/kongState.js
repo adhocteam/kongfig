@@ -83,8 +83,8 @@ export default async (adminApi) => {
     }));
 
     const allPlugins = await adminApi.fetchGlobalPlugins();
-    const isKongVersion1 = semVer.gte(version, '1.0.0');
     const globalPlugins = allPlugins.filter(plugin => {
+        isKongVersion1 = semVer.gte(version, '1.0.0');
         const serviceId = isKongVersion1 ? (plugin.service || {}).id : plugin.service_id;
         const routeId = isKongVersion1 ? (plugin.route || {}).id : plugin.route_id;
         return serviceId === undefined && routeId === undefined;
