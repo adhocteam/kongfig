@@ -30,14 +30,8 @@ export default state => {
         return { name, attributes: { username, ...attributes }, ...plugin };
     };
 
-    const fixApiPluginUsername = api => ({
-        ...api,
-        plugins: (api.plugins || []).map(fixPluginUsername).map(fixPluginAnonymous),
-    });
-
     return {
         ...state,
-        apis: state.apis && state.apis.map(fixApiPluginUsername),
         plugins: state.plugins && state.plugins.map(fixPluginUsername).map(fixPluginAnonymous),
     };
 };

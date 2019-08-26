@@ -10,6 +10,10 @@ Simply define your list of APIs and consumers in json and then run kongfig to en
 
 [![Build Status](https://travis-ci.org/mybuilder/kongfig.svg?branch=master)](https://travis-ci.org/mybuilder/kongfig)
 
+## Version Compatibility
+
+Kongfig is currently compatible with Kong version 0.14.x-0.15.x. 1.x compatibility is coming soon.
+
 ## Install
 
 ### Manually
@@ -351,11 +355,11 @@ upstreams:
 
 *A certificate object represents a public certificate/private key pair for an SSL certificate. These objects are used by Kong to handle SSL/TLS termination for encrypted requests. Certificates are optionally associated with SNI objects to tie a cert/key pair to one or more hostnames.*
 
-[Kong Certificate Object Reference](https://getkong.org/docs/0.11.x/admin-api/#certificate-object)
+[Kong Certificate Object Reference](https://getkong.org/docs/0.14.x/admin-api/#certificate-object)
 
 *An SNI object represents a many-to-one mapping of hostnames to a certificate. That is, a certificate object can have many hostnames associated with it; when Kong receives an SSL request, it uses the SNI field in the Client Hello to lookup the certificate object based on the SNI associated with the certificate.*
 
-[Kong SNI Objects Reference](https://getkong.org/docs/0.11.x/admin-api/#sni-objects)
+[Kong SNI Objects Reference](https://getkong.org/docs/0.14.x/admin-api/#sni-objects)
 
 ```yaml
 certificates:

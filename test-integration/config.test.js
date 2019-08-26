@@ -1,52 +1,75 @@
-import execute from '../lib/core';
-import { testAdminApi, exportToYaml, logger, getLog, getLocalState, tearDown } from './util';
-import readKongApi, { parseApiPostV10, parsePlugin, parseConsumer, parseAcl, parseGlobalPlugin } from '../lib/readKongApi';
-import { configLoader } from '../lib/configLoader';
+import execute from '../src/core';
+import { testAdminApi, exportToYaml, logger, getLog, getLocalState, tearDown, ignoreKeys } from './util';
+import readKongApi from '../src/readKongApi';
+import { configLoader } from '../src/configLoader';
 import fs from 'fs';
 import path from 'path';
-import pad from 'pad';
+import 'core-js/features/object/from-entries';
 
 beforeEach(tearDown);
+jest.setTimeout(10000);
 
-const requestToCurl = (uri, method, body) => {
-    switch (method) {
-        case 'POST': return `$ curl -i -X POST -H "Content-Type: application/json" \\\n  --url ${uri} \\\n  --data '${JSON.stringify(body)}'`;
-        default: return ``;
-    }
-};
+// This depends on ES2015's guarantee that object properties are stored
+// and returned in the order they were created. This isn't guaranteed in
+// older versions of the spec, but the node.js implementation has always
+// worked that way.
+const sortObjectProperties = obj => {
+    return Object.fromEntries(Object.entries(obj)
+        .sort(([k1, v1], [k2, v2]) => {
+            k1 > k2 ? 1 : -1;
+        })
+    );
+}
 
 const ignoreConfigOrder = state => ({
     ...state,
-    apis: state.apis.sort((a, b) => a.name > b.name ? 1 : -1),
     consumers: state.consumers.sort((a, b) => a.username > b.username ? 1 : -1),
-    plugins: state.plugins.sort((a, b) => a.attributes.config.minute - b.attributes.config.minute),
+    plugins: state.plugins
+        .sort((a, b) => a.attributes.config.minute - b.attributes.config.minute)
+        .map(plugin => ({
+            ...plugin,
+            attributes: sortObjectProperties(plugin.attributes),
+        })),
     upstreams: state.upstreams.map(upstream => ({
         ...upstream,
         targets: upstream.targets.sort((a, b) => a.target > b.target ? 1 : -1),
     })),
+    services: state.services.sort((a, b) => a.name > b.name ? 1 : -1),
 });
 
-const codeBlock = (code, lang = '') => `\`\`\`${lang}\n${code}\n\`\`\``;
-const title = text => `${text}\n${'-'.repeat(text.length)}`;
-const header = (text, level = 2) => `${'#'.repeat(level)} ${text}`;
-const append = (md, ...block) => block.reduce((md, block) => `${md}\n\n${block}`, md);
-const replaceDashWithSpace = text => text.split('-').join(' ');
+// In Kong <1.0, routes don't have names. As a workaround, when we
+// parse the route payload from kong, we set the name property to
+// the route's id (see the parseRoute function at src/readAdminApi.js:163).
+// This function sets route.name to route.id in our local state.
+const fixRouteNames = state => ({
+    ...state,
+    services: state.services.map(service => ({
+        ...service,
+        routes: service.routes.map(route => ({
+            ...route,
+            name: route.id,
+        })),
+    }))
+});
 
-const curlExample = `For illustrative purpose a cURL calls would be the following`;
-
-const addExampleFile = (configPath, filename, log) => {
-    const head = append(title(replaceDashWithSpace(filename.replace('.example.yml', '')) + " example"), header('Config file'), codeBlock(fs.readFileSync(configPath), 'yaml'), header('Using curl'), curlExample);
-    const content = getLog().reduce((content, log) => {
-        switch (log.type) {
-        case 'request': return append(content, header(replaceDashWithSpace(log.params.type), 3), codeBlock(requestToCurl(log.uri, log.params.method, log.params.body), 'sh'));
-        case 'response': return append(content, codeBlock(`HTTP ${log.status} ${log.statusText}`), codeBlock(JSON.stringify(log.content, null, 2)));
-
-        default: return content;
-        }
-    }, head);
-
-    fs.writeFileSync(path.resolve(__dirname, '../examples', filename.replace('.yml', '.md')), content, "UTF-8", { 'flags': 'w+' });
-};
+// It appears that kong returns the semi-optional paths, methods,
+// and hosts keys in some HTTP responses, but not in others.
+// This function adds those null keys for testing purposes.
+const addRouteNullKeys = state => { debugger; return ({
+    ...state,
+    services: state.services.map(service => ({
+        ...service,
+        routes: service.routes.map(route => ({
+            ...route,
+            attributes: {
+                ...route.attributes,
+                hosts: route.attributes.hosts || null,
+                paths: route.attributes.paths || null,
+                methods: route.attributes.methods || null,
+            },
+        })),
+    })),
+})};
 
 fs.readdirSync(path.resolve(__dirname, './config')).forEach(filename => {
     it(`should apply ${filename}`, async () => {
@@ -58,11 +81,7 @@ fs.readdirSync(path.resolve(__dirname, './config')).forEach(filename => {
         const kongState = ignoreConfigOrder(await readKongApi(testAdminApi));
 
         expect(getLog()).toMatchSnapshot();
-        expect(exportToYaml(kongState)).toMatchSnapshot();
-        expect(ignoreConfigOrder(getLocalState())).toEqual(kongState);
-
-        if (filename.endsWith('example.yml')) {
-            addExampleFile(configPath, filename, getLog());
-        }
+        expect(exportToYaml(ignoreKeys(kongState))).toMatchSnapshot();
+        expect(ignoreConfigOrder(fixRouteNames(getLocalState()))).toEqual(addRouteNullKeys(kongState));
     });
 });

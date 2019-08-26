@@ -13,17 +13,19 @@
     "version": "npm run-script build",
     "postversion": "git push && git push --tags",
     "publish-patch": "npm version patch && npm publish",
-    "test": "jest"
+    "test": "jest --testPathPattern=test/.*",
+    "test-integration": "TEST_INTEGRATION_KONG_HOST=localhost:8001 jest --runInBand --testPathPattern=test-integration/.*"
   },
   "author": "MyBuilder Ltd",
   "license": "MIT",
   "dependencies": {
-    "@babel/polyfill": "^7.2.5",
+    "@babel/polyfill": "^7.4.4",
     "colors": "^1.3.3",
     "commander": "^2.13.0",
     "invariant": "^2.2.4",
     "isomorphic-fetch": "^2.2.0",
     "js-yaml": "^3.10.0",
+    "lodash.isempty": "^4.4.0",
     "lodash.isequal": "^4.5.0",
     "minimist": "^1.2.0",
     "object-assign": "^4.0.1",
@@ -35,26 +37,20 @@
     "uuid": "^3.3.2"
   },
   "devDependencies": {
+    "@babel/cli": "^7.5.5",
+    "@babel/core": "^7.5.5",
     "@babel/plugin-proposal-object-rest-spread": "^7.3.1",
-    "@babel/cli": "^7.0.0",
-    "@babel/core": "^7.0.0",
-    "babel-jest": "^24.0.0",
+    "babel-jest": "^24.8.0",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-preset-env": "^1.7.0",
+    "core-js": "^3.1.4",
     "expect.js": "^0.3.1",
-    "jest": "^24.0.0",
-    "jest-cli": "^24.0.0"
+    "jest": "^24.8.0",
+    "jest-cli": "^24.8.0"
   },
   "jest": {
-    "roots": [
-      "src/",
-      "test/"
-    ],
     "setupFiles": [
       "<rootDir>/node_modules/@babel/polyfill/dist/polyfill.js"
-    ],
-    "testMatch": [
-      "<rootDir>/test/*.js"
     ],
     "testPathIgnorePatterns": [
       "<rootDir>/lib/",

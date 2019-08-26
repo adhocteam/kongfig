@@ -37,32 +37,6 @@ export function updateService(name, params) {
     };
 }
 
-export function createApi(name, params) {
-    return {
-        type: 'create-api',
-        endpoint: {name: 'apis'},
-        method: 'POST',
-        body: assign({}, params, {name})
-    };
-};
-
-export function removeApi(name) {
-    return {
-        type: 'remove-api',
-        endpoint: {name: 'api', params: {name}},
-        method: 'DELETE',
-    };
-}
-
-export function updateApi(name, params) {
-    return {
-        type: 'update-api',
-        endpoint: {name: 'api', params: {name}},
-        method: 'PATCH',
-        body: params
-    };
-}
-
 export function addServiceRoute(serviceId, { name, attributes }) {
     return {
         type: 'add-service-route',
@@ -136,32 +110,6 @@ export function updateServicePlugin(serviceId, pluginId, params) {
     return {
         type: 'update-service-plugin',
         endpoint: {name: 'service-plugin', params: {serviceId, pluginId}},
-        method: 'PATCH',
-        body: params
-    };
-}
-
-export function addApiPlugin(apiId, pluginName, params) {
-    return {
-        type: 'add-api-plugin',
-        endpoint: {name: 'api-plugins', params: {apiId, pluginName}},
-        method: 'POST',
-        body: assign({}, params, {name: pluginName})
-    };
-}
-
-export function removeApiPlugin(apiId, pluginId) {
-    return {
-        type: 'remove-api-plugin',
-        endpoint: {name: 'api-plugin', params: {apiId, pluginId}},
-        method: 'DELETE',
-    };
-}
-
-export function updateApiPlugin(apiId, pluginId, params) {
-    return {
-        type: 'update-api-plugin',
-        endpoint: {name: 'api-plugin', params: {apiId, pluginId}},
         method: 'PATCH',
         body: params
     };

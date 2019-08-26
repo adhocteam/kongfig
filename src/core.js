@@ -3,10 +3,10 @@
 import colors from 'colors';
 import assign from 'object-assign';
 import invariant from 'invariant';
+import semVer from 'semver';
 import readKongApi from './readKongApi';
 import {getSchema as getConsumerCredentialSchema} from './consumerCredentials';
-import {normalize as normalizeAttributes} from './utils';
-import { migrateApiDefinition } from './migrate';
+import {normalize as normalizeAttributes, getAssociatedEntityID} from './utils';
 import { logReducer } from './kongStateLocal';
 import getCurrentStateSelector from './stateSelector';
 import diff from './diff';
@@ -16,15 +16,9 @@ import {
   createService,
   updateService,
   removeService,
-  createApi,
-  removeApi,
-  updateApi,
   addRoutePlugin,
   removeRoutePlugin,
   updateRoutePlugin,
-  addApiPlugin,
-  removeApiPlugin,
-  updateApiPlugin,
   addServicePlugin,
   removeServicePlugin,
   updateServicePlugin,
@@ -110,7 +104,6 @@ export default async function execute(config, adminApi, logger = () => {}, remov
   const actions = [
     ...consumers(splitConsumersConfig.added),
     ...upstreams(config.upstreams),
-    ...apis(config.apis),
     ...services(config.services, removeRoutes),
     ...globalPlugins(config.plugins),
     ...certificates(config.certificates),
@@ -130,23 +123,31 @@ export default async function execute(config, adminApi, logger = () => {}, remov
 }
 
 export function services(services = [], removeRoutes) {
-  return services.reduce((actions, service) => [...actions, _service(service), removeOldRoutes(service, removeRoutes), ..._serviceRoutes(service), ..._servicePlugins(service)], []);
+  return services.reduce((actions, service) => {
+    // The _service function compares your service config with the current kong
+    // state, and determines what changes need to be made. It will add a remove-service
+    // action if the service has `ensure: removed`. If that happens before the routes
+    // are removed, kong will fail to remove the service, due to a foreign key constraint
+    // (the routes still reference the service).
+    if (shouldBeRemoved(service)) {
+        return [...actions, removeOldRoutes(service, removeRoutes), ..._serviceRoutes(service), ..._servicePlugins(service), _service(service)]
+    }
+    // In the other case, where _service returns a create-service action, we need
+    // to create the service before adding any other entities that reference the
+    // service, or those actions will fail because they attempt to reference a
+    // nonexistent service.
+    else {
+      return [...actions, _service(service), removeOldRoutes(service, removeRoutes), ..._serviceRoutes(service), ..._servicePlugins(service)]
+    }
+  }, []);
 }
 
 export function routes(serviceName, routes = []) {
   return routes.reduce((actions, route) => [...actions, _route(serviceName, route), ..._routePlugins(serviceName, route)], []);
 }
 
-export function apis(apis = []) {
-  return apis.reduce((actions, api) => [...actions, _api(api), ..._apiPlugins(api)], []);
-}
-
 export function globalPlugins(globalPlugins = []) {
   return globalPlugins.reduce((actions, plugin) => [...actions, _globalPlugin(plugin)], []);
-}
-
-export function plugins(apiName, plugins) {
-  return plugins.reduce((actions, plugin) => [...actions, _plugin(apiName, plugin)], []);
 }
 
 export function routePlugins(serviceName, routeName, plugins) {
@@ -267,11 +268,10 @@ function _bindWorldState(adminApi) {
   };
 }
 
-function _createWorld({apis, consumers, plugins, upstreams, services, certificates, _info: { version }}) {
+function _createWorld({consumers, plugins, upstreams, services, certificates, _info: { version }}) {
   const world = {
     getVersion: () => version,
 
-    hasApi: apiName => Array.isArray(apis) && apis.some(api => api.name === apiName),
     hasService: serviceName => Array.isArray(services) && services.some(service => service.name === serviceName),
     getService: serviceName => {
       const service = services.find(service => service.name === serviceName);
@@ -283,47 +283,33 @@ function _createWorld({apis, consumers, plugins, upstreams, services, certificat
     getServiceId: serviceName => {
       const id = world.getService(serviceName)._info.id;
 
-      invariant(id, `API ${serviceName} doesn't have an Id`);
-
-      return id;
-    },
-    getApi: apiName => {
-      const api = apis.find(api => api.name === apiName);
-
-      invariant(api, `Unable to find api ${apiName}`);
-
-      return api;
-    },
-    getApiId: apiName => {
-      const id = world.getApi(apiName)._info.id;
-
-      invariant(id, `API ${apiName} doesn't have an Id`);
+      invariant(id, `Service ${serviceName} doesn't have an Id`);
 
       return id;
     },
     getGlobalPlugin: (pluginName, pluginConsumerID) => {
-      const plugin = plugins.find(plugin => plugin.api_id === undefined && plugin.name === pluginName && plugin._info.consumer_id == pluginConsumerID);
+      const plugin = plugins.find(plugin => plugin.name === pluginName && pluginTargetsConsumer(plugin, pluginConsumerID));
 
       invariant(plugin, `Unable to find global plugin ${pluginName} for consumer ${pluginConsumerID}`);
 
       return plugin;
     },
     getServicePlugin: (serviceName, pluginName, pluginConsumerID) => {
-      const plugin = world.getService(serviceName).plugins.find(plugin => plugin.name == pluginName && plugin._info.consumer_id == pluginConsumerID);
+      const plugin = world.getService(serviceName).plugins.find(plugin => plugin.name == pluginName && pluginTargetsConsumer(plugin, pluginConsumerID));
 
       invariant(plugin, `Unable to find plugin ${pluginName}`);
 
       return plugin;
     },
     getRoutePluginId: (serviceName, routeName, pluginName, pluginConsumerID) => {
-      const pluginId = world.getServiceRoute(serviceName, routeName).plugins.find(plugin => plugin.name == pluginName && plugin._info.consumer_id == pluginConsumerID)._info.id;
+      const pluginId = world.getServiceRoute(serviceName, routeName).plugins.find(plugin => plugin.name == pluginName && pluginTargetsConsumer(plugin, pluginConsumerID))._info.id;
 
       invariant(pluginId, `Route plugin ${pluginName} doesn't have an id`);
 
       return pluginId;
     },
     getRoutePlugin: (serviceName, routeName, pluginName, pluginConsumerID) => {
-      const plugin = world.getServiceRoute(serviceName, routeName).plugins.find(plugin => plugin.name == pluginName && plugin._info.consumer_id == pluginConsumerID);
+      const plugin = world.getServiceRoute(serviceName, routeName).plugins.find(plugin => plugin.name == pluginName && pluginTargetsConsumer(plugin, pluginConsumerID));
 
       invariant(plugin, `Unable to find plugin ${pluginName}`);
 
@@ -333,20 +319,6 @@ function _createWorld({apis, consumers, plugins, upstreams, services, certificat
       const pluginId = world.getServicePlugin(serviceName, pluginName, pluginConsumerID)._info.id;
 
       invariant(pluginId, `Unable to find plugin id for ${serviceName} and ${pluginName}`);
-
-      return pluginId;
-    },
-    getPlugin: (apiName, pluginName, pluginConsumerID) => {
-      const plugin = world.getApi(apiName).plugins.find(plugin => plugin.name == pluginName && plugin._info.consumer_id == pluginConsumerID);
-
-      invariant(plugin, `Unable to find plugin ${pluginName}`);
-
-      return plugin;
-    },
-    getPluginId: (apiName, pluginName, pluginConsumerID) => {
-      const pluginId = world.getPlugin(apiName, pluginName, pluginConsumerID)._info.id;
-
-      invariant(pluginId, `Unable to find plugin id for ${apiName} and ${pluginName}`);
 
       return pluginId;
     },
@@ -362,16 +334,13 @@ function _createWorld({apis, consumers, plugins, upstreams, services, certificat
     },
     hasRoutePlugin: (serviceName, routeName, pluginName, pluginConsumerID) => {
       const route = world.getServiceRoute(serviceName, routeName);
-      return Array.isArray(route.plugins) && route.plugins.some(plugin => plugin.name == pluginName && plugin._info.consumer_id == pluginConsumerID);
+      return Array.isArray(route.plugins) && route.plugins.some(plugin => plugin.name == pluginName && pluginTargetsConsumer(plugin, pluginConsumerID));
     },
     hasServicePlugin: (serviceName, pluginName, pluginConsumerID) => {
-      return Array.isArray(services) && services.some(service => service.name === serviceName && Array.isArray(service.plugins) && service.plugins.some(plugin => plugin.name == pluginName && plugin._info.consumer_id == pluginConsumerID));
-    },
-    hasPlugin: (apiName, pluginName, pluginConsumerID) => {
-      return Array.isArray(apis) && apis.some(api => api.name === apiName && Array.isArray(api.plugins) && api.plugins.some(plugin => plugin.name == pluginName && plugin._info.consumer_id == pluginConsumerID));
+      return Array.isArray(services) && services.some(service => service.name === serviceName && Array.isArray(service.plugins) && service.plugins.some(plugin => plugin.name == pluginName && pluginTargetsConsumer(plugin, pluginConsumerID)));
     },
     hasGlobalPlugin: (pluginName, pluginConsumerID) => {
-      return Array.isArray(plugins) && plugins.some(plugin => plugin.api_id === undefined && plugin.name === pluginName && plugin._info.consumer_id === pluginConsumerID);
+      return Array.isArray(plugins) && plugins.some(plugin => plugin.name === pluginName && pluginTargetsConsumer(plugin, pluginConsumerID));
     },
     hasConsumer: (username) => {
       return Array.isArray(consumers) && consumers.some(consumer => consumer.username === username);
@@ -461,10 +430,6 @@ function _createWorld({apis, consumers, plugins, upstreams, services, certificat
       return consumer.custom_id == custom_id;
     },
 
-    isApiUpToDate: (api) => {
-      return diff(api.attributes, world.getApi(api.name).attributes).length == 0;
-    },
-
     isServiceUpToDate: (service) => {
       return diff(service.attributes, world.getService(service.name).attributes).length == 0;
     },
@@ -495,18 +460,6 @@ function _createWorld({apis, consumers, plugins, upstreams, services, certificat
 
     isRouteUpToDate: (serviceName, route) => {
       return diff(route.attributes, world.getServiceRoute(serviceName, route.id).attributes).length == 0;
-    },
-
-    isApiPluginUpToDate: (apiName, plugin, consumerID) => {
-      if (false == plugin.hasOwnProperty('attributes')) {
-        // of a plugin has no attributes, and its been added then it is up to date
-        return true;
-      }
-
-      let current = world.getPlugin(apiName, plugin.name, consumerID);
-      let attributes = normalizeAttributes(plugin.attributes);
-
-      return isAttributesWithConfigUpToDate(attributes, current.attributes);
     },
 
     isGlobalPluginUpToDate: (plugin, consumerID) => {
@@ -611,6 +564,10 @@ function _createWorld({apis, consumers, plugins, upstreams, services, certificat
   return world;
 }
 
+function pluginTargetsConsumer(plugin, consumerID) {
+  return getAssociatedEntityID(plugin._info, 'consumer') == consumerID;
+}
+
 function isAttributesWithConfigUpToDate(defined, current) {
   const excludingConfig = ({ config, ...rest }) => rest;
 
@@ -641,7 +598,7 @@ function removeOldRoutes(service, removeRoutes) {
       return noop({ type: 'noop-skip-remove-routes', service });
     }
 
-    if (world.hasService) {
+    if (world.hasService(service.name)) {
       const oldService = world.getService(service.name);
       return oldService.routes
         .filter((route) => !(service.routes.find((r) => r.id === route.id)))
@@ -657,7 +614,7 @@ function _service(service) {
   validateServiceRequiredAttributes(service);
 
   return (world) => {
-    if (service.ensure == 'removed') {
+    if (shouldBeRemoved(service)) {
       return world.hasService(service.name) ? removeService(service.name) : noop({ type: 'noop-service', service });
     }
 
@@ -673,41 +630,20 @@ function _service(service) {
   };
 }
 
-function _api(api) {
-  validateEnsure(api.ensure);
-  validateApiRequiredAttributes(api);
-
-  return migrateApiDefinition(api, (api, world) => {
-    if (api.ensure == 'removed') {
-      return world.hasApi(api.name) ? removeApi(api.name) : noop({ type: 'noop-api', api });
-    }
-
-    if (world.hasApi(api.name)) {
-      if (world.isApiUpToDate(api)) {
-        return noop({ type: 'noop-api', api });
-      }
-
-      return updateApi(api.name, api.attributes);
-    }
-
-    return createApi(api.name, api.attributes);
-  });
-}
-
-function _apiPlugins(api) {
-  return api.plugins && api.ensure != 'removed' ? plugins(api.name, api.plugins) : [];
-}
-
 function _routePlugins(serviceName, route) {
-  return route.plugins && route.ensure != 'remove' ? routePlugins(serviceName, route.name, route.plugins) : [];
+  return route.plugins && !shouldBeRemoved(route) ? routePlugins(serviceName, route.name, route.plugins) : [];
 }
 
 function _serviceRoutes(service) {
-  return service.routes && service.ensure != 'remove' ? routes(service.name, service.routes) : [];
+  return service.routes ? routes(service.name, service.routes) : [];
 }
 
 function _servicePlugins(service) {
-  return service.plugins && service.ensure != 'remove' ? servicePlugins(service.name, service.plugins) : [];
+  return service.plugins && !shouldBeRemoved(service) ? servicePlugins(service.name, service.plugins) : [];
+}
+
+function shouldBeRemoved(entity) {
+  return entity.ensure === 'removed';
 }
 
 function validateEnsure(ensure) {
@@ -726,29 +662,15 @@ function validateServiceRequiredAttributes(service) {
   }
 
   if (!service.hasOwnProperty('attributes')) {
-    throw Error(`"${service.name}" api has to declare "host", "protocol", and "port" attributes`);
+    throw Error(`"${service.name}" service has to declare "host", "protocol", and "port" attributes or "url" attribute.`);
   }
 
-  if (!service.attributes.hasOwnProperty('port') ||
+  if ((!service.attributes.hasOwnProperty('port') ||
       !service.attributes.hasOwnProperty('host') ||
-      !service.attributes.hasOwnProperty('protocol')) {
-    throw Error(`"${service.name}" api has to declare "host", "protocol", and "port" attributes`);
+      !service.attributes.hasOwnProperty('protocol')) &&
+      !service.attributes.hasOwnProperty('url') ) {
+    throw Error(`"${service.name}" service has to declare "host", "protocol", and "port" attributes or "url" attribute.`);
   }
-}
-
-function validateApiRequiredAttributes(api) {
-  if (false == api.hasOwnProperty('name')) {
-    throw Error(`"Api name is required: ${JSON.stringify(api, null, '  ')}`);
-  }
-
-  if (false == api.hasOwnProperty('attributes')) {
-    throw Error(`"${api.name}" api has to declare "upstream_url" attribute`);
-  }
-
-  if (false == api.attributes.hasOwnProperty('upstream_url')) {
-    throw Error(`"${api.name}" api has to declare "upstream_url" attribute`);
-  }
-
 }
 
 const swapConsumerReference = (world, plugin) => {
@@ -772,6 +694,11 @@ const swapConsumerReference = (world, plugin) => {
     newPluginDef = { ...plugin, attributes: { consumer_id, ...attributes } };
   }
 
+  if (semVer.gte(world.getVersion(), '1.0.0') && newPluginDef.attributes.consumer_id) {
+    newPluginDef.attributes.consumer = { id: newPluginDef.attributes.consumer_id }
+    delete newPluginDef.attributes.consumer_id
+  }
+
   return newPluginDef;
 };
 
@@ -779,7 +706,7 @@ function _route(serviceName, route) {
   validateEnsure(route.ensure);
 
   return world => {
-    if (route.ensure == 'removed') {
+    if (shouldBeRemoved(route)) {
       if (world.hasRoute(serviceName, route)) {
         return removeServiceRoute(world.getServiceId(serviceName), route);
       }
@@ -799,41 +726,14 @@ function _route(serviceName, route) {
   };
 }
 
-function _plugin(apiName, plugin) {
-  validateEnsure(plugin.ensure);
-
-  return world => {
-    const finalPlugin = swapConsumerReference(world, plugin);
-    const consumerID = finalPlugin.attributes && finalPlugin.attributes.consumer_id;
-
-    if (plugin.ensure == 'removed') {
-      if (world.hasPlugin(apiName, plugin.name, consumerID)) {
-        return removeApiPlugin(world.getApiId(apiName), world.getPluginId(apiName, plugin.name, consumerID));
-      }
-
-      return noop({ type: 'noop-plugin', plugin });
-    }
-
-    if (world.hasPlugin(apiName, plugin.name, consumerID)) {
-      if (world.isApiPluginUpToDate(apiName, plugin, consumerID)) {
-        return noop({ type: 'noop-plugin', plugin });
-      }
-
-      return updateApiPlugin(world.getApiId(apiName), world.getPluginId(apiName, plugin.name, consumerID), finalPlugin.attributes);
-    }
-
-    return addApiPlugin(world.getApiId(apiName), plugin.name, finalPlugin.attributes);
-  };
-}
-
 function _routePlugin(serviceName, routeName, plugin) {
   validateEnsure(plugin.ensure);
 
   return world => {
     const finalPlugin = swapConsumerReference(world, plugin);
-    const consumerID = finalPlugin.attributes && finalPlugin.attributes.consumer_id;
+    const consumerID = finalPlugin.attributes && getAssociatedEntityID(finalPlugin.attributes, 'consumer');
 
-    if (plugin.ensure == 'removed') {
+    if (shouldBeRemoved(plugin)) {
       if (world.hasRoutePlugin(serviceName, routeName, plugin.name, consumerID)) {
         return removeRoutePlugin(
           world.getServiceId(serviceName),
@@ -871,9 +771,9 @@ function _servicePlugin(serviceName, plugin) {
 
   return world => {
     const finalPlugin = swapConsumerReference(world, plugin);
-    const consumerID = finalPlugin.attributes && finalPlugin.attributes.consumer_id;
+    const consumerID = finalPlugin.attributes && getAssociatedEntityID(finalPlugin.attributes, 'consumer');
 
-    if (plugin.ensure == 'removed') {
+    if (shouldBeRemoved(plugin)) {
       if (world.hasServicePlugin(serviceName, plugin.name, consumerID)) {
         return removeServicePlugin(world.getServiceId(serviceName), world.getServicePluginId(serviceName, plugin.name, consumerID));
       }
@@ -898,9 +798,9 @@ function _globalPlugin(plugin) {
 
   return world => {
     const finalPlugin = swapConsumerReference(world, plugin);
-    const consumerID = finalPlugin.attributes && finalPlugin.attributes.consumer_id;
+    const consumerID = finalPlugin.attributes && getAssociatedEntityID(finalPlugin.attributes, 'consumer');
 
-    if (plugin.ensure == 'removed') {
+    if (shouldBeRemoved(plugin)) {
       if (world.hasGlobalPlugin(plugin.name, consumerID)) {
         return removeGlobalPlugin(world.getGlobalPluginId(plugin.name, consumerID));
       }
@@ -925,7 +825,7 @@ function _consumer(consumer) {
   validateConsumer(consumer);
 
   return world => {
-    if (consumer.ensure == 'removed') {
+    if (shouldBeRemoved(consumer)) {
       if (world.hasConsumer(consumer.username)) {
         return removeConsumer(world.getConsumerId(consumer.username));
       }
@@ -946,13 +846,13 @@ function _consumer(consumer) {
 
   let _credentials = [];
 
-  if (consumer.credentials && consumer.ensure != 'removed') {
+  if (consumer.credentials && !shouldBeRemoved(consumer)) {
     _credentials = consumerCredentials(consumer.username, consumer.credentials);
   }
 
   let _acls = [];
 
-  if (consumer.acls && consumer.ensure != 'removed') {
+  if (consumer.acls && !shouldBeRemoved(consumer)) {
     _acls = consumerAcls(consumer.username, consumer.acls);
   }
 
@@ -966,7 +866,7 @@ function validateConsumer({username}) {
 }
 
 function _consumerCredentials(consumer) {
-  if (!consumer.credentials || consumer.ensure == 'removed') {
+  if (!consumer.credentials || shouldBeRemoved(consumer)) {
     return [];
   }
 
@@ -978,7 +878,7 @@ function _consumerCredential(username, credential) {
   validateCredentialRequiredAttributes(credential);
 
   return world => {
-    if (credential.ensure == 'removed') {
+    if (shouldBeRemoved(credential)) {
       if (world.hasConsumerCredential(username, credential.name, credential.attributes)) {
         const credentialId = world.getConsumerCredentialId(username, credential.name, credential.attributes);
 
@@ -1025,7 +925,7 @@ function validateAclRequiredAttributes(acl) {
 }
 
 function _consumerAcls(consumer) {
-  if (!consumer.acls || consumer.ensure == 'removed') {
+  if (!consumer.acls || shouldBeRemoved(consumer)) {
     return [];
   }
 
@@ -1038,7 +938,7 @@ function _consumerAcl(username, acl) {
   validateAclRequiredAttributes(acl);
 
   return world => {
-    if (acl.ensure == 'removed') {
+    if (shouldBeRemoved(acl)) {
       if (world.hasConsumerAcl(username, acl.group)) {
         const aclId = world.getConsumerAclId(username, acl.group);
 
@@ -1061,7 +961,7 @@ function _upstream(upstream) {
   validateUpstreamRequiredAttributes(upstream);
 
   return world => {
-    if (upstream.ensure == 'removed') {
+    if (shouldBeRemoved(upstream)) {
       if (world.hasUpstream(upstream.name)) {
         return removeUpstream(upstream.name)
       }
@@ -1085,7 +985,7 @@ function _target(upstreamName, target) {
   validateEnsure(target.ensure);
 
   return world => {
-    if (target.ensure == 'removed' || (target.attributes && target.attributes.weight === 0)) {
+    if (shouldBeRemoved(target) || (target.attributes && target.attributes.weight === 0)) {
       if (world.hasUpstreamTarget(upstreamName, target.target)) {
         return removeUpstreamTarget(world.getUpstreamId(upstreamName), target.target);
       }
@@ -1106,7 +1006,7 @@ function _target(upstreamName, target) {
 }
 
 function _upstreamTargets(upstream) {
-  return upstream.targets && upstream.ensure != 'removed' ? targets(upstream.name, upstream.targets) : [];
+  return upstream.targets && !shouldBeRemoved(upstream) ? targets(upstream.name, upstream.targets) : [];
 }
 
 function validateUpstreamRequiredAttributes(upstream) {
@@ -1121,7 +1021,7 @@ const _certificate = certificate => {
   return world => {
     const identityClue = certificate.key.substr(1, 50);
 
-    if (certificate.ensure == 'removed') {
+    if (shouldBeRemoved(certificate)) {
       if (world.hasCertificate(certificate)) {
         return removeCertificate(world.getCertificateId(certificate));
       }
@@ -1149,7 +1049,7 @@ const _sni = (certificate, sni) => {
     const currentSNIs = world.getCertificateSNIs(certificate).map(x => x.name);
     const hasSNI = currentSNIs.indexOf(sni.name) !== -1;
 
-    if (sni.ensure == 'removed') {
+    if (shouldBeRemoved(sni)) {
       if (hasSNI) {
         return removeCertificateSNI(sni.name);
       }

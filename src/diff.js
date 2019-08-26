@@ -1,3 +1,5 @@
+import isEmpty from 'lodash.isempty';
+
 const isValueSameOneArrayElement = (a, b) => {
   return typeof a === 'string'
     && Array.isArray(b)
@@ -14,6 +16,25 @@ const isValueDifferent = (a, b) => {
 
   if (a === null || typeof a === 'undefined') {
     return (b !== null && typeof b !== 'undefined');
+  }
+
+  // If b is an object remove any empty keys. Objects from the server
+  // sometimes are populated with empty objects, which triggers a diff
+  // even if there is no diff, causing confusion. In particular
+  // transform-response and transform-request plugins seem to always have
+  // empty objects from the server. This for loop will turn an object:
+  //
+  // {"querystring":{},"headers":["Authorization:Basic blah"],"body":{}}
+  //
+  // into:
+  //
+  // {"headers":["Authorization:Basic blah"]}
+  for (var key in b) {
+    if (b.hasOwnProperty(key)) {
+      if (isEmpty(b[key])) {
+        delete b[key];
+      }
+    }
   }
 
   return JSON.stringify(a) !== JSON.stringify(b);

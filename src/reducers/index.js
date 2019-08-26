@@ -1,4 +1,3 @@
-import apis from './apis';
 import plugins from './plugins';
 import consumers from './consumers';
 import upstreams from './upstreams';
@@ -7,7 +6,7 @@ import services from './services';
 
 const combine = reducers => (state = {}, log) => {
     return Object.keys(reducers).reduce((nextState, key) => {
-        nextState[key] = reducers[key](state[key], log);
+        nextState[key] = reducers[key](state[key], log, state._info && state._info.version);
 
         return nextState;
     }, state);
@@ -25,7 +24,6 @@ const _info = (state = {}, log) => {
 
 export default combine({
     _info,
-    apis,
     plugins,
     consumers,
     upstreams,

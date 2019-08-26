@@ -1,10 +1,8 @@
-apis:
+services:
   - name: "mockbin"
     ensure: "present"
     attributes:
-      upstream_url: "http://mockbin.com"
-      hosts:
-          - "mockbin.com"
+      url: "http://mockbin.com"
     plugins:
       - name: "key-auth"
         attributes:

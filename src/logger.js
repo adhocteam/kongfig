@@ -19,7 +19,6 @@ const censorLogData = data => JSON.parse(JSON.stringify(data, censor));
 
 export const screenLogger = createLogHandler({
     noop: message => createLogHandler({
-        'noop-api': ({ api }) => console.log(`api ${api.name.bold} ${'is up to date'.bold.green}`),
         'noop-service': ({ service: { name } }) => console.log(`service ${name.bold} ${'is up to date'.bold.green}`),
         'noop-route': ({ route: { name }}) => console.log(`route ${name.bold} ${'is up to date'.bold.green}`),
         'noop-plugin': ({ plugin }) => console.log(`- plugin ${plugin.name.bold} ${'is up to date'.bold.green}`),

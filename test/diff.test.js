@@ -53,6 +53,14 @@ describe("diff", () => {
 
 
 describe("diff hacks", () => {
+    it("should ignore empty objects from the server", () => {
+        expect(diff({ key: { foo: 'bar'} }, { key: {foo: 'bar', empty: {} } })).to.be.eql([]);
+    });
+
+    it("should not ignore empty objects from the defined", () => {
+        expect(diff({ key: { foo: 'bar', empty: {} } }, { key: { foo: 'bar' } })).to.be.eql(['key']);
+    });
+
     it("should be same redirect_uri when a string", () => {
         expect(diff({ redirect_uri: 'foobar' }, { redirect_uri: 'foobar' })).to.be.eql([]);
         expect(diff({ redirect_uri: 'foobar' }, { redirect_uri: ['foobar'] })).to.be.eql([]);

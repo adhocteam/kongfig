@@ -79,7 +79,7 @@ else {
     }
 }
 
-const updateRouteIds = ({host, headers, apis, services, ...config}, state) => {
+const updateRouteIds = ({host, headers, services, ...config}, state) => {
     const updatedServices = services.map(({routes, ...service}) => {
         const updatedRoutes = routes.map(({name, id, ...route}) => {
             const updatedId = state.services.find((s) => s.name === service.name).routes.find((r) => r.name == name).id;
@@ -97,7 +97,6 @@ const updateRouteIds = ({host, headers, apis, services, ...config}, state) => {
     return {
         host,
         headers,
-        apis,
         services: updatedServices,
         ...config
     };

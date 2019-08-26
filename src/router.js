@@ -3,10 +3,6 @@ export default function createRouter(host, https) {
     const adminApiRoot = `${protocol}://${host}`;
     return ({name, params}) => {
         switch (name) {
-        case 'apis': return `${adminApiRoot}/apis`;
-        case 'api': return `${adminApiRoot}/apis/${params.name}`;
-        case 'api-plugins': return `${adminApiRoot}/apis/${params.apiId}/plugins`;
-        case 'api-plugin': return `${adminApiRoot}/apis/${params.apiId}/plugins/${params.pluginId}`;
         case 'consumers': return `${adminApiRoot}/consumers`;
         case 'consumer': return `${adminApiRoot}/consumers/${params.consumerId}`;
         case 'consumer-credentials': return `${adminApiRoot}/consumers/${params.consumerId}/${params.plugin}`;

@@ -1,6 +1,6 @@
-import execute from '../lib/core';
+import execute from '../src/core';
 import { testAdminApi, logger, exportToYaml, getLog, getLocalState, tearDown } from './util';
-import readKongApi from '../lib/readKongApi';
+import readKongApi from '../src/readKongApi';
 
 beforeEach(tearDown);
 
