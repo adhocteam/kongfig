@@ -16,7 +16,9 @@ describe("plugins", () => {
                 'config.foo': "bar"
             }
         }])
-        .map(x => x({hasGlobalPlugin: () => false}));
+        .map(x => x({
+            getVersion: () => '1.0.0',
+            hasGlobalPlugin: () => false}));
 
         expect(actual).to.be.eql([
             addGlobalPlugin('cors', {'config.foo': "bar"})
@@ -32,6 +34,7 @@ describe("plugins", () => {
             }
         }])
         .map(x => x({
+                    getVersion: () => '1.0.0',
                     hasGlobalPlugin: () => true,
                     getGlobalPluginId: () => 123
                     }));
@@ -48,6 +51,7 @@ describe("plugins", () => {
                 'config.foo': 'bar'
             }}]
         ).map(x => x({
+            getVersion: () => '1.0.0',
             hasGlobalPlugin: () => true,
             getGlobalPluginId: () => 123,
             isGlobalPluginUpToDate: () => false
