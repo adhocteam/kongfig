@@ -17,6 +17,11 @@ describe("plugins", () => {
             }
         }])
         .map(x => x({
+            // The reason '1.0.0' was picked:
+            //   1) We had to pick something
+            //   2) What we pick has no impact on this test
+            //   3) '1.0.0' is used in the code at https://github.com/adhocteam/kongfig/blob/master/src/core.js#L697
+            //      so it seems safe to assume it is a valid value
             getVersion: () => '1.0.0',
             hasGlobalPlugin: () => false}));
 
