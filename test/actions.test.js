@@ -4,7 +4,7 @@ import {updateServiceRoute, addServiceRoute} from '../src/actions.js';
 const ROUTE_CONFIG = {
   name: 'name',
   id: 'id',
-  skip_auth: true,
+  ignore_skip_auth: true,
   plugins: [],
   attributes: {
     strip_path: false,
@@ -31,14 +31,14 @@ const EXPECTED_BODY = {
 };
 
 describe('update service route', () => {
-  it('ignores "skip_auth"', () => {
+  it('ignores fields prefixed with "ignore_"', () => {
     const req = updateServiceRoute('id', ROUTE_CONFIG);
     expect(req.body).to.be.eql(EXPECTED_BODY);
   });
 });
 
 describe('add service route', () => {
-  it('ignores "skip_auth"', () => {
+  it('ignores fields prefixed with "ignore_"', () => {
     const req = addServiceRoute('id', ROUTE_CONFIG);
     expect(req.body).to.be.eql(EXPECTED_BODY);
   });
