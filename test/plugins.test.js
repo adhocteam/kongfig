@@ -1,11 +1,16 @@
 import expect from 'expect.js';
-import {apis, plugins, globalPlugins} from '../src/core.js';
+import {globalPlugins} from '../src/core.js';
 import {
-    noop,
     addGlobalPlugin,
     removeGlobalPlugin,
     updateGlobalPlugin
 } from '../src/actions.js';
+import { parsePlugin } from '../src/readKongApi.js';
+
+// Many of these tests use a partial mock of the world object
+// in src/core.js. 1.0.0 is an arbitrary but reasonable version
+// string to return for our mocked world.getVersion function.
+const getVersion = () => '1.0.0';
 
 describe("plugins", () => {
     it("should add new global plugin", () => {
@@ -16,7 +21,10 @@ describe("plugins", () => {
                 'config.foo': "bar"
             }
         }])
-        .map(x => x({hasGlobalPlugin: () => false}));
+        .map(x => x({
+            getVersion: getVersion,
+            hasGlobalPlugin: () => false
+        }));
 
         expect(actual).to.be.eql([
             addGlobalPlugin('cors', {'config.foo': "bar"})
@@ -32,6 +40,7 @@ describe("plugins", () => {
             }
         }])
         .map(x => x({
+                    getVersion: getVersion,
                     hasGlobalPlugin: () => true,
                     getGlobalPluginId: () => 123
                     }));
@@ -48,6 +57,7 @@ describe("plugins", () => {
                 'config.foo': 'bar'
             }}]
         ).map(x => x({
+            getVersion: getVersion,
             hasGlobalPlugin: () => true,
             getGlobalPluginId: () => 123,
             isGlobalPluginUpToDate: () => false
@@ -65,4 +75,17 @@ describe("plugins", () => {
         }])).to.throwException(/Invalid ensure/);
     });
 
+    it("should not remove unknown attributes", () => {
+        const plugin = {
+            name: 'cors',
+            id: 'b58117d6-4fb4-4d44-a4a9-b753719dcbee',
+            enabled: true,
+            created_at: 1569855466,
+            config: {
+                foo: 'bar',
+            },
+            foo: ['bar', 'baz'],
+        }
+        expect(parsePlugin(plugin, '1.0.0').attributes.foo).to.be.eql(['bar', 'baz']);
+    });
 });
