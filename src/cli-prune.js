@@ -30,5 +30,5 @@ const yaml_config = pretty('yaml')(config);
 writeFileSync(output, yaml_config);
 
 function is_item_removed(item) {
-  return item.ensure == 'removed'
+  return item.ensure == 'removed';
 }
