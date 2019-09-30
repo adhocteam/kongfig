@@ -7,4 +7,5 @@ commander
     .allowUnknownOption()
     .command('apply', 'Apply config to a kong server', {isDefault: true})
     .command('dump', 'Dump the configuration from a kong server')
+    .command('prune', 'Remove any items marked "ensure: removed"')
     .parse(process.argv);
