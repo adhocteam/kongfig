@@ -6,7 +6,7 @@ import invariant from 'invariant';
 import semVer from 'semver';
 import readKongApi from './readKongApi';
 import {getSchema as getConsumerCredentialSchema} from './consumerCredentials';
-import {normalize as normalizeAttributes, getAssociatedEntityID} from './utils';
+import {normalize as normalizeAttributes, getAssociatedEntityID, shouldBeRemoved} from './utils';
 import { logReducer } from './kongStateLocal';
 import getCurrentStateSelector from './stateSelector';
 import diff from './diff';
@@ -640,10 +640,6 @@ function _serviceRoutes(service) {
 
 function _servicePlugins(service) {
   return service.plugins && !shouldBeRemoved(service) ? servicePlugins(service.name, service.plugins) : [];
-}
-
-function shouldBeRemoved(entity) {
-  return entity.ensure === 'removed';
 }
 
 function validateEnsure(ensure) {

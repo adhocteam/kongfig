@@ -1,9 +1,15 @@
+// This command will remove services, routes and plugins (global and for
+// services/routes) that have been marked "ensure: removed" from a kongfig
+// file. This script does not currently remove consumers certificates or
+// upstreams
+
 import program from 'commander';
 import remove from 'lodash.remove';
 
 import { configLoader, resolvePath } from './configLoader';
 import { writeFileSync } from 'fs';
 import { pretty } from './prettyConfig';
+import { shouldBeRemoved } from './utils'
 
 program
   .version(require("../package.json").version)
@@ -14,21 +20,17 @@ program
 let config = configLoader(program.path);
 let output = resolvePath(program.output || program.path);
 
-remove(config.plugins, is_item_removed);
-remove(config.services, is_item_removed);
+remove(config.plugins, shouldBeRemoved);
+remove(config.services, shouldBeRemoved);
 
 config.services.forEach(function(service) {
-  remove(service.plugins, is_item_removed);
-  remove(service.routes, is_item_removed);
+  remove(service.plugins, shouldBeRemoved);
+  remove(service.routes, shouldBeRemoved);
 
   service.routes.forEach(function(route) {
-    remove(route.plugins, is_item_removed);
+    remove(route.plugins, shouldBeRemoved);
   });
 });
 
 const yaml_config = pretty('yaml')(config);
 writeFileSync(output, yaml_config);
-
-function is_item_removed(item) {
-  return item.ensure == 'removed';
-}
