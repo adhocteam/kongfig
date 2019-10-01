@@ -67,3 +67,7 @@ export function parseVersion(version) {
 export function getAssociatedEntityID(primary, entityType) {
     return primary[`${entityType}_id`] || (primary[entityType] && primary[entityType].id)
 }
+
+export function shouldBeRemoved(entity) {
+    return entity.ensure === 'removed';
+}
