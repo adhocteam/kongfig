@@ -65,14 +65,16 @@ export const parsePlugin = (plugin, version) => {
         config,
         id,
         enabled,
-        created_at
+        created_at,
+        ...attributes
     } = plugin
 
     let parsed = {
         name,
         attributes: {
             enabled,
-            config: stripConfig(config)
+            config: stripConfig(config),
+            ...attributes
         },
         _info: {
             id,
