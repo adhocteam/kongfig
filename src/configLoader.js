@@ -1,3 +1,4 @@
+import changeCase from 'change-case';
 import fs from 'fs';
 import path from 'path';
 import yaml from 'js-yaml';
@@ -15,7 +16,8 @@ export function configLoader(configPath) {
 
     const rawConfig = fs.readFileSync(configPath, 'utf8');
     const compiledConfig = rawConfig.replace(/\$\$\$_([A-Za-z]+)_\$\$\$/g, (match, variableName) => {
-        return process.env[variableName];
+        const envVariableName = changeCase.constantCase(variableName);
+        return process.env[envVariableName] || process.env[variableName];
     });
 
     if(/(\.yml)|(\.yaml)/.test(configPath)) {
