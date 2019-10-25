@@ -13,12 +13,17 @@ export function configLoader(configPath) {
         return process.exit(1);
     }
 
+    const rawConfig = fs.readFileSync(configPath, 'utf8');
+    const compiledConfig = rawConfig.replace(/\$\$\$_([A-Za-z]+)_\$\$\$/g, (match, variableName) => {
+        return process.env[variableName];
+    });
+
     if(/(\.yml)|(\.yaml)/.test(configPath)) {
-        return yaml.safeLoad(fs.readFileSync(configPath));
+        return yaml.safeLoad(compiledConfig);
     }
 
     if (/(\.json)/.test(configPath)) {
-        return JSON.parse(fs.readFileSync(configPath));
+        return JSON.parse(compiledConfig);
     }
 
     if (/(\.js)/.test(configPath)) {
