@@ -15,9 +15,15 @@ export function configLoader(configPath) {
     }
 
     const rawConfig = fs.readFileSync(configPath, 'utf8');
-    const compiledConfig = rawConfig.replace(/\$\{([A-Za-z_]+)\}\$/g, (match, variableName) => {
+    const compiledConfig = rawConfig.replace(/\$\{(.+)\}/g, (match, variableName) => {
+        const allowedNameRegex = /^[_a-zA-Z0-9]+$/;
+        if (!allowedNameRegex.test(variableName)) {
+            log.error(`Configuration variable name ${variableName} is invalid.\nAllowed characters are letters, numbers, and underscores.`);
+            process.exit(1);
+        }
+
         if (process.env[variableName] === undefined) {
-            log.error(`Configuration value ${variableName} was not present in the environment`);
+            log.error(`Configuration value ${variableName} was not present in the environment.`);
             process.exit(1);
         }
         return process.env[variableName];
