@@ -15,9 +15,11 @@ export function configLoader(configPath) {
     }
 
     const rawConfig = fs.readFileSync(configPath, 'utf8');
-    const compiledConfig = rawConfig.replace(/\$\$\$_([A-Za-z]+)_\$\$\$/g, (match, variableName) => {
-        const envVariableName = changeCase.constantCase(variableName);
-        return process.env[envVariableName] || process.env[variableName];
+    const compiledConfig = rawConfig.replace(/\$\{([A-Za-z_]+)\}\$/g, (match, variableName) => {
+        if (process.env[variableName] === undefined) {
+            throw new Error(`Configuration value ${variableName} was not present in the environment`)
+        }
+        return process.env[variableName];
     });
 
     if(/(\.yml)|(\.yaml)/.test(configPath)) {
