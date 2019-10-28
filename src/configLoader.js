@@ -1,4 +1,5 @@
 import fs from 'fs';
+import mapDeep from 'deepdash/mapDeep';
 import path from 'path';
 import yaml from 'js-yaml';
 
@@ -13,28 +14,36 @@ export function configLoader(configPath) {
         return process.exit(1);
     }
 
-    const rawConfig = fs.readFileSync(configPath, 'utf8');
-    const compiledConfig = rawConfig.replace(/\$\{(.+)\}/g, (match, variableName) => {
-        const allowedNameRegex = /^[_a-zA-Z0-9]+$/;
-        if (!allowedNameRegex.test(variableName)) {
-            log.error(`Configuration variable name ${variableName} is invalid.\nAllowed characters are letters, numbers, and underscores.`);
-            process.exit(1);
-        }
-
-        if (process.env[variableName] === undefined) {
-            log.error(`Configuration value ${variableName} was not present in the environment.`);
-            process.exit(1);
-        }
-        return process.env[variableName];
-    });
-
+    let rawConfig;
     if(/(\.yml)|(\.yaml)/.test(configPath)) {
-        return yaml.safeLoad(compiledConfig);
+        rawConfig = yaml.safeLoad(fs.readFileSync(configPath, 'utf8'));
+    } else if (/(\.json)/.test(configPath)) {
+        rawConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    } else {
+        log.error(`${configPath} is not a supported Kongfig config format. Supported formats are YAML and JSON.`);
+        process.exit(1);
     }
 
-    if (/(\.json)/.test(configPath)) {
-        return JSON.parse(compiledConfig);
-    }
+    return mapDeep(rawConfig, configValue => {
+        if (typeof configValue !== 'string') {
+            return configValue;
+        }
+
+        return configValue.replace(/\$\{(.+)\}/g, (match, variableName) => {
+            const allowedNameRegex = /^[_a-zA-Z0-9]+$/;
+            if (!allowedNameRegex.test(variableName)) {
+                log.error(`Configuration variable name ${variableName} is invalid.\nAllowed characters are letters, numbers, and underscores.`);
+                process.exit(1);
+            }
+            
+            if (process.env[variableName] === undefined) {
+                log.error(`Configuration value ${variableName} was not present in the environment.`);
+                process.exit(1);
+            }
+
+            return process.env[variableName];
+        });
+    });
 }
 
 export function resolvePath(configPath) {
@@ -44,8 +53,3 @@ export function resolvePath(configPath) {
 
     return path.resolve(process.cwd(), configPath);
 }
-
-const CONFIG_SYNTAX_HELP =
-  '  module.exports = {\n' +
-  '    // your config\n' +
-  '  };\n';
