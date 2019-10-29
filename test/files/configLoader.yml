@@ -1,0 +1,12 @@
+my_yaml_config:
+  property: value
+  bad_var_formats:
+    - $$$_FAKE_VAR_$$$ is the old format
+    - "#{} isn't right either"
+  non_strings:
+    - 100
+    - 12.8
+    - true
+  my_secret_key: 'Key: ${MY_BIG_SECRET}'
+  dont_be_greedy: two env variables??? an ${NOUN_1} of ${NOUN_2}
+  
