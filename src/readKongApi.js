@@ -114,7 +114,7 @@ export function parseRoute({ id, created_at, updated_at, service, ...rest }, ser
             name = route.attributes.name || route.name;
         }
     }
-    return { name, id, attributes: {...rest}, _info: { id, updated_at, created_at } };
+    return { name, id, attributes: {...rest, name}, _info: { id, updated_at, created_at } };
 }
 
 function parseRoutes(routes, serviceName= '', config = {}, version) {
