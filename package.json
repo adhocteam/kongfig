@@ -1,6 +1,6 @@
 {
   "name": "@adhocteam/kongfig",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "A tool for Kong to allow declarative configuration.",
   "repository": "https://github.com/adhocteam/kongfig",
   "bin": {
@@ -14,7 +14,8 @@
     "postversion": "git push && git push --tags",
     "publish-patch": "npm version patch && npm publish",
     "test": "jest --testPathPattern=test/.*",
-    "test-integration": "TEST_INTEGRATION_KONG_HOST=localhost:8001 jest --runInBand --testPathPattern=test-integration/.*"
+    "test-integration": "TEST_INTEGRATION_KONG_HOST=localhost:8001 jest --runInBand --testPathPattern=test-integration/.*",
+    "local-install": "npm run build && npm install -g $PWD"
   },
   "author": "MyBuilder Ltd",
   "license": "MIT",
@@ -22,6 +23,7 @@
     "@babel/polyfill": "^7.4.4",
     "colors": "^1.3.3",
     "commander": "^2.13.0",
+    "deepdash": "^4.2.16",
     "invariant": "^2.2.4",
     "isomorphic-fetch": "^2.2.0",
     "js-yaml": "^3.13.1",
