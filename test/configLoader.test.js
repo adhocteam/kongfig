@@ -132,7 +132,7 @@ describe('configLoader', () => {
 
         expect(() => configLoader('config.yml'))
           .to
-          .throwException();
+          .throwException("Configuration value FORGOT_TO_DEFINE_THIS was not present in the environment.");
       });
     });
 
