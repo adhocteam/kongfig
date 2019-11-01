@@ -2,6 +2,10 @@ import fs from 'fs';
 import mapDeep from 'deepdash/mapDeep';
 import path from 'path';
 import yaml from 'js-yaml';
+import mergeWith from 'lodash/mergeWith';
+import lookUpEnvironmentVar from './environment';
+
+const ENV_VAR_REGEX = /\$\{(.+?)\}/g;
 
 export const log = {
     info: message => console.log(message.green),
@@ -29,19 +33,8 @@ export function configLoader(configPath) {
             return configValue;
         }
 
-        return configValue.replace(/\$\{(.+?)\}/g, (match, variableName) => {
-            const allowedNameRegex = /^[_a-zA-Z0-9]+$/;
-            if (!allowedNameRegex.test(variableName)) {
-                log.error(`Configuration variable name ${variableName} is invalid.\nAllowed characters are letters, numbers, and underscores.`);
-                throw new Error(`Configuration variable name ${variableName} is invalid`);
-            }
-            
-            if (process.env[variableName] === undefined) {
-                log.error(`Configuration value ${variableName} was not present in the environment.`);
-                throw new Error(`Configuration value ${variableName} was not present in the environment.`);
-            }
-
-            return process.env[variableName];
+        return configValue.replace(ENV_VAR_REGEX, (match, variableName) => {
+            return lookUpEnvironmentVar(variableName);
         });
     });
 }
@@ -52,4 +45,16 @@ export function resolvePath(configPath) {
     }
 
     return path.resolve(process.cwd(), configPath);
+}
+
+// with the introduction of environment variable subsitution, we need to restore environment
+// variables in the written config for consistency + not writing secrets to disk.
+export function sanitizeConfigForSafeWrite(oldConfig, newConfig) {
+    return mergeWith(oldConfig, newConfig, (originalValue, updatedValue) => {
+        if (!ENV_VAR_REGEX.test(originalValue)) {
+            return updatedValue;
+        }
+
+        return originalValue;
+    })
 }

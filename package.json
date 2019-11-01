@@ -29,6 +29,7 @@
     "js-yaml": "^3.13.1",
     "lodash.isempty": "^4.4.0",
     "lodash.isequal": "^4.5.0",
+    "lodash.mergewith": "^4.6.2",
     "lodash.remove": "^4.5.0",
     "minimist": "^1.2.0",
     "object-assign": "^4.0.1",
