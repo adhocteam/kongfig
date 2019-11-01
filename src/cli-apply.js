@@ -49,7 +49,6 @@ let config = configLoader(program.path);
 let host = program.host || config.host || 'localhost:8001';
 let https = program.https || config.https || false;
 let ignoreConsumers = program.ignoreConsumers || !config.consumers || config.consumers.length === 0 || false;
-let output = resolvePath(program.output || program.path);
 let { localState, cache, removeRoutes, dryRun } = program;
 
 config.headers = config.headers || [];
@@ -108,7 +107,8 @@ execute(config, adminApi({host, https, ignoreConsumers, cache}), screenLogger, r
     .then((out) => updateRouteIds(config, out))
     .then(pretty('yaml'))
     .then ((updatedConfig) => {
-        if (!isEqual(config, updatedConfig ) && !dryRun) {
+        if (!isEqual(config, updatedConfig ) && !dryRun && program.output) {
+            const output = resolvePath(program.output);
             console.log(`Writing output to ${output}`);
             writeFileSync(output, updatedConfig);
         } else {
