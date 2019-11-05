@@ -11,7 +11,7 @@ const endpoint = {
 
 async function requestRoute(params) {
     const response = await testAdminApi.requestEndpoint(endpoint, params);
-    return await response.json()
+    return await response.json();
 }
 
 beforeEach(async () => {
@@ -86,8 +86,5 @@ it("should update a route name when it's an attribute", async () => {
         ]
     };
     await execute(config, testAdminApi);
-    expect(await requestRoute({ method: "GET" })).toHaveProperty(
-        "name",
-        "foo"
-    );
+    expect(await requestRoute({ method: "GET" })).toHaveProperty("name", "foo");
 });
