@@ -1,0 +1,188 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`global plugins should properly swap username for consumer id 1`] = `
+Array [
+  Object {
+    "type": "kong-info",
+    "version": "___version___",
+  },
+  Object {
+    "params": Object {
+      "body": Object {
+        "username": "user",
+      },
+      "endpoint": Object {
+        "name": "consumers",
+      },
+      "method": "POST",
+      "type": "create-customer",
+    },
+    "type": "request",
+    "uri": "http://localhost:8001/consumers",
+  },
+  Object {
+    "content": Object {
+      "created_at": "___created_at___",
+      "custom_id": null,
+      "id": "2b47ba9b-761a-492d-9a0c-000000000001",
+      "tags": null,
+      "username": "user",
+    },
+    "ok": true,
+    "params": Object {
+      "body": Object {
+        "username": "user",
+      },
+      "endpoint": Object {
+        "name": "consumers",
+      },
+      "method": "POST",
+      "type": "create-customer",
+    },
+    "status": 201,
+    "statusText": "Created",
+    "type": "response",
+    "uri": "http://localhost:8001/consumers",
+  },
+  Object {
+    "params": Object {
+      "body": Object {
+        "config": Object {
+          "fault_tolerant": true,
+          "hide_client_headers": false,
+          "limit_by": "consumer",
+          "policy": "cluster",
+          "redis_database": 0,
+          "redis_port": 6379,
+          "redis_timeout": 2000,
+          "second": 5,
+        },
+        "consumer": Object {
+          "id": "2b47ba9b-761a-492d-9a0c-000000000001",
+        },
+        "enabled": true,
+        "name": "rate-limiting",
+      },
+      "endpoint": Object {
+        "name": "plugins",
+        "params": Object {
+          "pluginName": "rate-limiting",
+        },
+      },
+      "method": "POST",
+      "type": "add-global-plugin",
+    },
+    "type": "request",
+    "uri": "http://localhost:8001/plugins",
+  },
+  Object {
+    "content": Object {
+      "config": Object {
+        "day": null,
+        "fault_tolerant": true,
+        "hide_client_headers": false,
+        "hour": null,
+        "limit_by": "consumer",
+        "minute": null,
+        "month": null,
+        "policy": "cluster",
+        "redis_database": 0,
+        "redis_host": null,
+        "redis_password": null,
+        "redis_port": 6379,
+        "redis_timeout": 2000,
+        "second": 5,
+        "year": null,
+      },
+      "consumer": Object {
+        "id": "2b47ba9b-761a-492d-9a0c-000000000001",
+      },
+      "created_at": "___created_at___",
+      "enabled": true,
+      "id": "2b47ba9b-761a-492d-9a0c-000000000002",
+      "name": "rate-limiting",
+      "protocols": Array [
+        "http",
+        "https",
+      ],
+      "route": null,
+      "run_on": "first",
+      "service": null,
+      "tags": null,
+    },
+    "ok": true,
+    "params": Object {
+      "body": Object {
+        "config": Object {
+          "fault_tolerant": true,
+          "hide_client_headers": false,
+          "limit_by": "consumer",
+          "policy": "cluster",
+          "redis_database": 0,
+          "redis_port": 6379,
+          "redis_timeout": 2000,
+          "second": 5,
+        },
+        "consumer": Object {
+          "id": "2b47ba9b-761a-492d-9a0c-000000000001",
+        },
+        "enabled": true,
+        "name": "rate-limiting",
+      },
+      "endpoint": Object {
+        "name": "plugins",
+        "params": Object {
+          "pluginName": "rate-limiting",
+        },
+      },
+      "method": "POST",
+      "type": "add-global-plugin",
+    },
+    "status": 201,
+    "statusText": "Created",
+    "type": "response",
+    "uri": "http://localhost:8001/plugins",
+  },
+  Object {
+    "type": "kong-info",
+    "version": "___version___",
+  },
+  Object {
+    "params": Object {
+      "consumer": Object {
+        "ensure": "present",
+        "username": "user",
+      },
+      "noop": true,
+      "type": "noop-consumer",
+    },
+    "type": "noop",
+  },
+  Object {
+    "params": Object {
+      "noop": true,
+      "plugin": Object {
+        "attributes": Object {
+          "config": Object {
+            "fault_tolerant": true,
+            "hide_client_headers": false,
+            "limit_by": "consumer",
+            "policy": "cluster",
+            "redis_database": 0,
+            "redis_port": 6379,
+            "redis_timeout": 2000,
+            "second": 5,
+          },
+          "consumer": Object {
+            "id": "2b47ba9b-761a-492d-9a0c-000000000001",
+          },
+          "enabled": true,
+        },
+        "name": "rate-limiting",
+      },
+      "type": "noop-global-plugin",
+    },
+    "type": "noop",
+  },
+]
+`;
