@@ -118,6 +118,7 @@ rvANyaCjA5QV2cxhZgw9YmwUkP5I6XftplGB81CjmTguGjJ/k5SS8sA2DCHZUna6
 vxTZvHMdrkoTodEYmy67Kno3NZotwhRUIdgdQhDN+aG+wjOCxKMTRQ==
 -----END RSA PRIVATE KEY-----",
       "snis": Array [],
+      "tags": null,
     },
     "ok": true,
     "params": Object {
@@ -206,6 +207,7 @@ vxTZvHMdrkoTodEYmy67Kno3NZotwhRUIdgdQhDN+aG+wjOCxKMTRQ==
       "created_at": "___created_at___",
       "id": "2b47ba9b-761a-492d-9a0c-000000000002",
       "name": "example.com",
+      "tags": null,
     },
     "ok": true,
     "params": Object {
@@ -251,6 +253,7 @@ vxTZvHMdrkoTodEYmy67Kno3NZotwhRUIdgdQhDN+aG+wjOCxKMTRQ==
       "created_at": "___created_at___",
       "id": "2b47ba9b-761a-492d-9a0c-000000000003",
       "name": "www.example.com",
+      "tags": null,
     },
     "ok": true,
     "params": Object {
@@ -395,6 +398,7 @@ Array [
       "created_at": "___created_at___",
       "custom_id": null,
       "id": "2b47ba9b-761a-492d-9a0c-000000000001",
+      "tags": null,
       "username": "iphone-app",
     },
     "ok": true,
@@ -433,7 +437,9 @@ Array [
   },
   Object {
     "content": Object {
-      "consumer_id": "2b47ba9b-761a-492d-9a0c-000000000001",
+      "consumer": Object {
+        "id": "2b47ba9b-761a-492d-9a0c-000000000001",
+      },
       "created_at": "___created_at___",
       "id": "2b47ba9b-761a-492d-9a0c-000000000002",
       "key": "very-secret-key",
@@ -477,7 +483,9 @@ Array [
   },
   Object {
     "content": Object {
-      "consumer_id": "2b47ba9b-761a-492d-9a0c-000000000001",
+      "consumer": Object {
+        "id": "2b47ba9b-761a-492d-9a0c-000000000001",
+      },
       "created_at": "___created_at___",
       "group": "foo-group",
       "id": "2b47ba9b-761a-492d-9a0c-000000000003",
@@ -571,6 +579,8 @@ consumers:
       - name: key-auth
         attributes:
           key: very-secret-key
+          consumer:
+            id: 2b47ba9b-761a-492d-9a0c-000000000001
 plugins: []
 upstreams: []
 certificates: []
@@ -609,13 +619,26 @@ Array [
     "content": Object {
       "config": Object {
         "credentials": false,
+        "exposed_headers": null,
+        "headers": null,
         "max_age": 7000,
+        "methods": null,
+        "origins": null,
         "preflight_continue": false,
       },
+      "consumer": null,
       "created_at": "___created_at___",
       "enabled": true,
       "id": "2b47ba9b-761a-492d-9a0c-000000000001",
       "name": "cors",
+      "protocols": Array [
+        "http",
+        "https",
+      ],
+      "route": null,
+      "run_on": "first",
+      "service": null,
+      "tags": null,
     },
     "ok": true,
     "params": Object {
@@ -672,9 +695,21 @@ plugins:
   - name: cors
     attributes:
       enabled: true
+      service: null
+      protocols:
+        - http
+        - https
+      run_on: first
+      consumer: null
+      route: null
+      tags: null
       config:
-        credentials: false
+        methods: null
+        exposed_headers: null
         max_age: 7000
+        headers: null
+        origins: null
+        credentials: false
         preflight_continue: false
 upstreams: []
 certificates: []
@@ -706,6 +741,7 @@ Array [
       "created_at": "___created_at___",
       "custom_id": null,
       "id": "2b47ba9b-761a-492d-9a0c-000000000001",
+      "tags": null,
       "username": "iphone-app",
     },
     "ok": true,
@@ -744,7 +780,9 @@ Array [
   },
   Object {
     "content": Object {
-      "consumer_id": "2b47ba9b-761a-492d-9a0c-000000000001",
+      "consumer": Object {
+        "id": "2b47ba9b-761a-492d-9a0c-000000000001",
+      },
       "created_at": "___created_at___",
       "id": "2b47ba9b-761a-492d-9a0c-000000000002",
       "key": "very-secret-key",
@@ -796,6 +834,7 @@ Array [
       "protocol": "http",
       "read_timeout": 60000,
       "retries": 5,
+      "tags": null,
       "updated_at": "___updated_at___",
       "write_timeout": 60000,
     },
@@ -842,7 +881,7 @@ Array [
   Object {
     "content": Object {
       "config": Object {
-        "anonymous": "",
+        "anonymous": null,
         "hide_credentials": false,
         "key_in_body": false,
         "key_names": Array [
@@ -850,11 +889,21 @@ Array [
         ],
         "run_on_preflight": true,
       },
+      "consumer": null,
       "created_at": "___created_at___",
       "enabled": true,
       "id": "2b47ba9b-761a-492d-9a0c-000000000004",
       "name": "key-auth",
-      "service_id": "2b47ba9b-761a-492d-9a0c-000000000003",
+      "protocols": Array [
+        "http",
+        "https",
+      ],
+      "route": null,
+      "run_on": "first",
+      "service": Object {
+        "id": "2b47ba9b-761a-492d-9a0c-000000000003",
+      },
+      "tags": null,
     },
     "ok": true,
     "params": Object {
@@ -949,6 +998,7 @@ Array [
       "protocol": "http",
       "read_timeout": 60000,
       "retries": 5,
+      "tags": null,
       "updated_at": "___updated_at___",
       "write_timeout": 60000,
     },
@@ -1001,10 +1051,19 @@ exports[`should apply key-auth.example.yml 2`] = `
           config:
             key_names:
               - very-secret-key
-            key_in_body: false
-            anonymous: ''
             run_on_preflight: true
+            anonymous: null
             hide_credentials: false
+            key_in_body: false
+          service:
+            id: 2b47ba9b-761a-492d-9a0c-000000000003
+          protocols:
+            - http
+            - https
+          run_on: first
+          consumer: null
+          route: null
+          tags: null
     routes: []
     attributes:
       host: mockbin.com
@@ -1023,6 +1082,8 @@ consumers:
       - name: key-auth
         attributes:
           key: very-secret-key
+          consumer:
+            id: 2b47ba9b-761a-492d-9a0c-000000000001
 plugins: []
 upstreams: []
 certificates: []
@@ -1054,6 +1115,7 @@ Array [
       "created_at": "___created_at___",
       "custom_id": null,
       "id": "2b47ba9b-761a-492d-9a0c-000000000001",
+      "tags": null,
       "username": "anonymous-user",
     },
     "ok": true,
@@ -1091,6 +1153,7 @@ Array [
       "created_at": "___created_at___",
       "custom_id": null,
       "id": "2b47ba9b-761a-492d-9a0c-000000000002",
+      "tags": null,
       "username": "iphone-app",
     },
     "ok": true,
@@ -1129,7 +1192,9 @@ Array [
   },
   Object {
     "content": Object {
-      "consumer_id": "2b47ba9b-761a-492d-9a0c-000000000002",
+      "consumer": Object {
+        "id": "2b47ba9b-761a-492d-9a0c-000000000002",
+      },
       "created_at": "___created_at___",
       "id": "2b47ba9b-761a-492d-9a0c-000000000003",
       "key": "very-secret-key",
@@ -1181,6 +1246,7 @@ Array [
       "protocol": "http",
       "read_timeout": 60000,
       "retries": 5,
+      "tags": null,
       "updated_at": "___updated_at___",
       "write_timeout": 60000,
     },
@@ -1236,11 +1302,21 @@ Array [
         ],
         "run_on_preflight": true,
       },
+      "consumer": null,
       "created_at": "___created_at___",
       "enabled": true,
       "id": "2b47ba9b-761a-492d-9a0c-000000000005",
       "name": "key-auth",
-      "service_id": "2b47ba9b-761a-492d-9a0c-000000000004",
+      "protocols": Array [
+        "http",
+        "https",
+      ],
+      "route": null,
+      "run_on": "first",
+      "service": Object {
+        "id": "2b47ba9b-761a-492d-9a0c-000000000004",
+      },
+      "tags": null,
     },
     "ok": true,
     "params": Object {
@@ -1347,6 +1423,7 @@ Array [
       "protocol": "http",
       "read_timeout": 60000,
       "retries": 5,
+      "tags": null,
       "updated_at": "___updated_at___",
       "write_timeout": 60000,
     },
@@ -1371,68 +1448,21 @@ Array [
   },
   Object {
     "params": Object {
-      "body": Object {
-        "config": Object {
-          "anonymous": "2b47ba9b-761a-492d-9a0c-000000000001",
-          "key_names": Array [
-            "very-secret-key",
-          ],
+      "noop": true,
+      "plugin": Object {
+        "attributes": Object {
+          "config": Object {
+            "anonymous": "2b47ba9b-761a-492d-9a0c-000000000001",
+            "key_names": Array [
+              "very-secret-key",
+            ],
+          },
         },
+        "name": "key-auth",
       },
-      "endpoint": Object {
-        "name": "service-plugin",
-        "params": Object {
-          "pluginId": "2b47ba9b-761a-492d-9a0c-000000000005",
-          "serviceId": "2b47ba9b-761a-492d-9a0c-000000000004",
-        },
-      },
-      "method": "PATCH",
-      "type": "update-service-plugin",
+      "type": "noop-plugin",
     },
-    "type": "request",
-    "uri": "http://localhost:8001/plugins/2b47ba9b-761a-492d-9a0c-000000000005",
-  },
-  Object {
-    "content": Object {
-      "config": Object {
-        "anonymous": "2b47ba9b-761a-492d-9a0c-000000000001",
-        "hide_credentials": false,
-        "key_in_body": false,
-        "key_names": Array [
-          "very-secret-key",
-        ],
-        "run_on_preflight": true,
-      },
-      "created_at": "___created_at___",
-      "enabled": true,
-      "id": "2b47ba9b-761a-492d-9a0c-000000000005",
-      "name": "key-auth",
-      "service_id": "2b47ba9b-761a-492d-9a0c-000000000004",
-    },
-    "ok": true,
-    "params": Object {
-      "body": Object {
-        "config": Object {
-          "anonymous": "2b47ba9b-761a-492d-9a0c-000000000001",
-          "key_names": Array [
-            "very-secret-key",
-          ],
-        },
-      },
-      "endpoint": Object {
-        "name": "service-plugin",
-        "params": Object {
-          "pluginId": "2b47ba9b-761a-492d-9a0c-000000000005",
-          "serviceId": "2b47ba9b-761a-492d-9a0c-000000000004",
-        },
-      },
-      "method": "PATCH",
-      "type": "update-service-plugin",
-    },
-    "status": 200,
-    "statusText": "OK",
-    "type": "response",
-    "uri": "http://localhost:8001/plugins/2b47ba9b-761a-492d-9a0c-000000000005",
+    "type": "noop",
   },
 ]
 `;
@@ -1447,10 +1477,19 @@ exports[`should apply key-auth-anonymous.example.yml 2`] = `
           config:
             key_names:
               - very-secret-key
-            key_in_body: false
-            anonymous: 2b47ba9b-761a-492d-9a0c-000000000001
             run_on_preflight: true
+            anonymous: 2b47ba9b-761a-492d-9a0c-000000000001
             hide_credentials: false
+            key_in_body: false
+          service:
+            id: 2b47ba9b-761a-492d-9a0c-000000000004
+          protocols:
+            - http
+            - https
+          run_on: first
+          consumer: null
+          route: null
+          tags: null
     routes: []
     attributes:
       host: mockbin.com
@@ -1473,6 +1512,8 @@ consumers:
       - name: key-auth
         attributes:
           key: very-secret-key
+          consumer:
+            id: 2b47ba9b-761a-492d-9a0c-000000000002
 plugins: []
 upstreams: []
 certificates: []
@@ -1504,6 +1545,7 @@ Array [
       "created_at": "___created_at___",
       "custom_id": null,
       "id": "2b47ba9b-761a-492d-9a0c-000000000001",
+      "tags": null,
       "username": "user-john",
     },
     "ok": true,
@@ -1549,6 +1591,7 @@ Array [
       "protocol": "http",
       "read_timeout": 60000,
       "retries": 5,
+      "tags": null,
       "updated_at": "___updated_at___",
       "write_timeout": 60000,
     },
@@ -1575,7 +1618,9 @@ Array [
         "config": Object {
           "second": 10,
         },
-        "consumer_id": "2b47ba9b-761a-492d-9a0c-000000000001",
+        "consumer": Object {
+          "id": "2b47ba9b-761a-492d-9a0c-000000000001",
+        },
         "name": "rate-limiting",
       },
       "endpoint": Object {
@@ -1594,21 +1639,39 @@ Array [
   Object {
     "content": Object {
       "config": Object {
+        "day": null,
         "fault_tolerant": true,
         "hide_client_headers": false,
+        "hour": null,
         "limit_by": "consumer",
+        "minute": null,
+        "month": null,
         "policy": "cluster",
         "redis_database": 0,
+        "redis_host": null,
+        "redis_password": null,
         "redis_port": 6379,
         "redis_timeout": 2000,
         "second": 10,
+        "year": null,
       },
-      "consumer_id": "2b47ba9b-761a-492d-9a0c-000000000001",
+      "consumer": Object {
+        "id": "2b47ba9b-761a-492d-9a0c-000000000001",
+      },
       "created_at": "___created_at___",
       "enabled": true,
       "id": "2b47ba9b-761a-492d-9a0c-000000000003",
       "name": "rate-limiting",
-      "service_id": "2b47ba9b-761a-492d-9a0c-000000000002",
+      "protocols": Array [
+        "http",
+        "https",
+      ],
+      "route": null,
+      "run_on": "first",
+      "service": Object {
+        "id": "2b47ba9b-761a-492d-9a0c-000000000002",
+      },
+      "tags": null,
     },
     "ok": true,
     "params": Object {
@@ -1616,7 +1679,9 @@ Array [
         "config": Object {
           "second": 10,
         },
-        "consumer_id": "2b47ba9b-761a-492d-9a0c-000000000001",
+        "consumer": Object {
+          "id": "2b47ba9b-761a-492d-9a0c-000000000001",
+        },
         "name": "rate-limiting",
       },
       "endpoint": Object {
@@ -1661,6 +1726,7 @@ Array [
       "protocol": "http",
       "read_timeout": 60000,
       "retries": 5,
+      "tags": null,
       "updated_at": "___updated_at___",
       "write_timeout": 60000,
     },
@@ -1687,7 +1753,9 @@ Array [
         "config": Object {
           "minute": 60,
         },
-        "consumer_id": "2b47ba9b-761a-492d-9a0c-000000000001",
+        "consumer": Object {
+          "id": "2b47ba9b-761a-492d-9a0c-000000000001",
+        },
         "enabled": true,
         "name": "rate-limiting",
       },
@@ -1706,20 +1774,37 @@ Array [
   Object {
     "content": Object {
       "config": Object {
+        "day": null,
         "fault_tolerant": true,
         "hide_client_headers": false,
+        "hour": null,
         "limit_by": "consumer",
         "minute": 60,
+        "month": null,
         "policy": "cluster",
         "redis_database": 0,
+        "redis_host": null,
+        "redis_password": null,
         "redis_port": 6379,
         "redis_timeout": 2000,
+        "second": null,
+        "year": null,
       },
-      "consumer_id": "2b47ba9b-761a-492d-9a0c-000000000001",
+      "consumer": Object {
+        "id": "2b47ba9b-761a-492d-9a0c-000000000001",
+      },
       "created_at": "___created_at___",
       "enabled": true,
       "id": "2b47ba9b-761a-492d-9a0c-000000000005",
       "name": "rate-limiting",
+      "protocols": Array [
+        "http",
+        "https",
+      ],
+      "route": null,
+      "run_on": "first",
+      "service": null,
+      "tags": null,
     },
     "ok": true,
     "params": Object {
@@ -1727,7 +1812,9 @@ Array [
         "config": Object {
           "minute": 60,
         },
-        "consumer_id": "2b47ba9b-761a-492d-9a0c-000000000001",
+        "consumer": Object {
+          "id": "2b47ba9b-761a-492d-9a0c-000000000001",
+        },
         "enabled": true,
         "name": "rate-limiting",
       },
@@ -1769,19 +1856,35 @@ Array [
   Object {
     "content": Object {
       "config": Object {
+        "day": null,
         "fault_tolerant": true,
         "hide_client_headers": false,
+        "hour": null,
         "limit_by": "consumer",
         "minute": 30,
+        "month": null,
         "policy": "cluster",
         "redis_database": 0,
+        "redis_host": null,
+        "redis_password": null,
         "redis_port": 6379,
         "redis_timeout": 2000,
+        "second": null,
+        "year": null,
       },
+      "consumer": null,
       "created_at": "___created_at___",
       "enabled": true,
       "id": "2b47ba9b-761a-492d-9a0c-000000000006",
       "name": "rate-limiting",
+      "protocols": Array [
+        "http",
+        "https",
+      ],
+      "route": null,
+      "run_on": "first",
+      "service": null,
+      "tags": null,
     },
     "ok": true,
     "params": Object {
@@ -1849,6 +1952,7 @@ Array [
       "protocol": "http",
       "read_timeout": 60000,
       "retries": 5,
+      "tags": null,
       "updated_at": "___updated_at___",
       "write_timeout": 60000,
     },
@@ -1873,66 +1977,22 @@ Array [
   },
   Object {
     "params": Object {
-      "body": Object {
-        "config": Object {
-          "second": 10,
+      "noop": true,
+      "plugin": Object {
+        "attributes": Object {
+          "config": Object {
+            "second": 10,
+          },
+          "consumer": Object {
+            "id": "2b47ba9b-761a-492d-9a0c-000000000001",
+          },
         },
-        "consumer_id": "2b47ba9b-761a-492d-9a0c-000000000001",
+        "ensure": "present",
+        "name": "rate-limiting",
       },
-      "endpoint": Object {
-        "name": "service-plugin",
-        "params": Object {
-          "pluginId": "2b47ba9b-761a-492d-9a0c-000000000003",
-          "serviceId": "2b47ba9b-761a-492d-9a0c-000000000002",
-        },
-      },
-      "method": "PATCH",
-      "type": "update-service-plugin",
+      "type": "noop-plugin",
     },
-    "type": "request",
-    "uri": "http://localhost:8001/plugins/2b47ba9b-761a-492d-9a0c-000000000003",
-  },
-  Object {
-    "content": Object {
-      "config": Object {
-        "fault_tolerant": true,
-        "hide_client_headers": false,
-        "limit_by": "consumer",
-        "policy": "cluster",
-        "redis_database": 0,
-        "redis_port": 6379,
-        "redis_timeout": 2000,
-        "second": 10,
-      },
-      "consumer_id": "2b47ba9b-761a-492d-9a0c-000000000001",
-      "created_at": "___created_at___",
-      "enabled": true,
-      "id": "2b47ba9b-761a-492d-9a0c-000000000003",
-      "name": "rate-limiting",
-      "service_id": "2b47ba9b-761a-492d-9a0c-000000000002",
-    },
-    "ok": true,
-    "params": Object {
-      "body": Object {
-        "config": Object {
-          "second": 10,
-        },
-        "consumer_id": "2b47ba9b-761a-492d-9a0c-000000000001",
-      },
-      "endpoint": Object {
-        "name": "service-plugin",
-        "params": Object {
-          "pluginId": "2b47ba9b-761a-492d-9a0c-000000000003",
-          "serviceId": "2b47ba9b-761a-492d-9a0c-000000000002",
-        },
-      },
-      "method": "PATCH",
-      "type": "update-service-plugin",
-    },
-    "status": 200,
-    "statusText": "OK",
-    "type": "response",
-    "uri": "http://localhost:8001/plugins/2b47ba9b-761a-492d-9a0c-000000000003",
+    "type": "noop",
   },
   Object {
     "params": Object {
@@ -1963,6 +2023,7 @@ Array [
       "protocol": "http",
       "read_timeout": 60000,
       "retries": 5,
+      "tags": null,
       "updated_at": "___updated_at___",
       "write_timeout": 60000,
     },
@@ -1993,8 +2054,10 @@ Array [
           "config": Object {
             "minute": 60,
           },
+          "consumer": Object {
+            "id": "2b47ba9b-761a-492d-9a0c-000000000001",
+          },
           "enabled": true,
-          "username": "user-john",
         },
         "name": "rate-limiting",
       },
@@ -2041,15 +2104,31 @@ exports[`should apply plugin-per-consumer.example.yml 2`] = `
         attributes:
           enabled: true
           config:
-            second: 10
-            redis_database: 0
+            minute: null
             policy: cluster
-            hide_client_headers: false
+            month: null
             redis_timeout: 2000
-            redis_port: 6379
             limit_by: consumer
+            hide_client_headers: false
+            second: 10
+            day: null
+            redis_password: null
+            year: null
+            redis_database: 0
+            hour: null
+            redis_port: 6379
+            redis_host: null
             fault_tolerant: true
-          consumer_id: 2b47ba9b-761a-492d-9a0c-000000000001
+          service:
+            id: 2b47ba9b-761a-492d-9a0c-000000000002
+          protocols:
+            - http
+            - https
+          run_on: first
+          consumer:
+            id: 2b47ba9b-761a-492d-9a0c-000000000001
+          route: null
+          tags: null
     routes: []
     attributes:
       host: mockbin.com
@@ -2069,27 +2148,57 @@ plugins:
   - name: rate-limiting
     attributes:
       enabled: true
+      service: null
+      protocols:
+        - http
+        - https
+      run_on: first
+      consumer: null
+      route: null
+      tags: null
       config:
-        hide_client_headers: false
         minute: 30
         policy: cluster
-        redis_database: 0
+        month: null
         redis_timeout: 2000
-        redis_port: 6379
         limit_by: consumer
+        hide_client_headers: false
+        second: null
+        day: null
+        redis_password: null
+        year: null
+        redis_database: 0
+        hour: null
+        redis_port: 6379
+        redis_host: null
         fault_tolerant: true
   - name: rate-limiting
     attributes:
-      username: user-john
       enabled: true
+      service: null
+      protocols:
+        - http
+        - https
+      run_on: first
+      consumer:
+        id: 2b47ba9b-761a-492d-9a0c-000000000001
+      route: null
+      tags: null
       config:
-        hide_client_headers: false
         minute: 60
         policy: cluster
-        redis_database: 0
+        month: null
         redis_timeout: 2000
-        redis_port: 6379
         limit_by: consumer
+        hide_client_headers: false
+        second: null
+        day: null
+        redis_password: null
+        year: null
+        redis_database: 0
+        hour: null
+        redis_port: 6379
+        redis_host: null
         fault_tolerant: true
 upstreams: []
 certificates: []
@@ -2129,6 +2238,7 @@ Array [
       "protocol": "http",
       "read_timeout": 60000,
       "retries": 5,
+      "tags": null,
       "updated_at": "___updated_at___",
       "write_timeout": 60000,
     },
@@ -2175,9 +2285,11 @@ Array [
   Object {
     "content": Object {
       "created_at": "___created_at___",
+      "destinations": null,
       "hosts": null,
       "id": "2b47ba9b-761a-492d-9a0c-000000000002",
       "methods": null,
+      "name": null,
       "paths": Array [
         "/mockbin",
       ],
@@ -2190,7 +2302,10 @@ Array [
       "service": Object {
         "id": "2b47ba9b-761a-492d-9a0c-000000000001",
       },
+      "snis": null,
+      "sources": null,
       "strip_path": true,
+      "tags": null,
       "updated_at": "___updated_at___",
     },
     "ok": true,
@@ -2251,6 +2366,7 @@ Array [
       "protocol": "http",
       "read_timeout": 60000,
       "retries": 5,
+      "tags": null,
       "updated_at": "___updated_at___",
       "write_timeout": 60000,
     },
@@ -2335,9 +2451,11 @@ Array [
   Object {
     "content": Object {
       "created_at": "___created_at___",
+      "destinations": null,
       "hosts": null,
       "id": "2b47ba9b-761a-492d-9a0c-000000000003",
       "methods": null,
+      "name": null,
       "paths": Array [
         "/mockbin",
       ],
@@ -2350,7 +2468,10 @@ Array [
       "service": Object {
         "id": "2b47ba9b-761a-492d-9a0c-000000000001",
       },
+      "snis": null,
+      "sources": null,
       "strip_path": true,
+      "tags": null,
       "updated_at": "___updated_at___",
     },
     "ok": true,
@@ -2391,13 +2512,20 @@ exports[`should apply service-route.example.yml 2`] = `
         name: 2b47ba9b-761a-492d-9a0c-000000000003
         attributes:
           strip_path: true
+          snis: null
+          hosts: null
+          name: null
+          methods: null
+          sources: null
           preserve_host: false
           regex_priority: 0
           paths:
             - /mockbin
+          destinations: null
           protocols:
             - http
             - https
+          tags: null
     attributes:
       host: mockbin.com
       port: 80
@@ -2439,8 +2567,11 @@ Array [
     "content": Object {
       "created_at": "___created_at___",
       "hash_fallback": "none",
+      "hash_fallback_header": null,
       "hash_on": "none",
+      "hash_on_cookie": null,
       "hash_on_cookie_path": "/",
+      "hash_on_header": null,
       "healthchecks": Object {
         "active": Object {
           "concurrency": 10,
@@ -2453,7 +2584,10 @@ Array [
             "successes": 0,
           },
           "http_path": "/",
+          "https_sni": null,
+          "https_verify_certificate": true,
           "timeout": 1,
+          "type": "http",
           "unhealthy": Object {
             "http_failures": 0,
             "http_statuses": Array [
@@ -2496,6 +2630,7 @@ Array [
             ],
             "successes": 0,
           },
+          "type": "http",
           "unhealthy": Object {
             "http_failures": 0,
             "http_statuses": Array [
@@ -2511,6 +2646,7 @@ Array [
       "id": "2b47ba9b-761a-492d-9a0c-000000000001",
       "name": "mockbinUpstream",
       "slots": 10,
+      "tags": null,
     },
     "ok": true,
     "params": Object {
@@ -2553,7 +2689,9 @@ Array [
       "created_at": "___created_at___",
       "id": "2b47ba9b-761a-492d-9a0c-000000000002",
       "target": "server1.mockbin:3001",
-      "upstream_id": "2b47ba9b-761a-492d-9a0c-000000000001",
+      "upstream": Object {
+        "id": "2b47ba9b-761a-492d-9a0c-000000000001",
+      },
       "weight": 50,
     },
     "ok": true,
@@ -2601,7 +2739,9 @@ Array [
       "created_at": "___created_at___",
       "id": "2b47ba9b-761a-492d-9a0c-000000000003",
       "target": "server2.mockbin:3001",
-      "upstream_id": "2b47ba9b-761a-492d-9a0c-000000000001",
+      "upstream": Object {
+        "id": "2b47ba9b-761a-492d-9a0c-000000000001",
+      },
       "weight": 50,
     },
     "ok": true,

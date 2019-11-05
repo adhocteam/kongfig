@@ -28,12 +28,26 @@ Array [
     "content": Object {
       "config": Object {
         "credentials": false,
+        "exposed_headers": null,
+        "headers": null,
+        "max_age": null,
+        "methods": null,
+        "origins": null,
         "preflight_continue": false,
       },
+      "consumer": null,
       "created_at": "___created_at___",
       "enabled": true,
       "id": "2b47ba9b-761a-492d-9a0c-000000000001",
       "name": "cors",
+      "protocols": Array [
+        "http",
+        "https",
+      ],
+      "route": null,
+      "run_on": "first",
+      "service": null,
+      "tags": null,
     },
     "ok": true,
     "params": Object {
@@ -82,7 +96,20 @@ plugins:
   - name: cors
     attributes:
       enabled: true
+      service: null
+      protocols:
+        - http
+        - https
+      run_on: first
+      consumer: null
+      route: null
+      tags: null
       config:
+        methods: null
+        exposed_headers: null
+        max_age: null
+        headers: null
+        origins: null
         credentials: false
         preflight_continue: false
 upstreams: []
