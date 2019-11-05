@@ -164,21 +164,21 @@ describe('configLoader module', () => {
   describe('sanitizeConfigForSafeWrite', () => {
     it('should not transform anything if the config has not changed', () => {
       const config = { foo: 'bar' };
-      sanitizeConfigForSafeWrite(config, {});
-      expect(config).to.eql(config);
+      const cleanConfig = sanitizeConfigForSafeWrite(config, {});
+      expect(cleanConfig).to.eql(config);
     });
     
     it('should not transform non-string values', () => {
       const config = { integer: 5, obj: {}, arr: [] };
-      sanitizeConfigForSafeWrite(config, {});
-      expect(config).to.eql(config);
+      const cleanConfig = sanitizeConfigForSafeWrite(config, {});
+      expect(cleanConfig).to.eql(config);
     });
 
     it('should replace secrets with their variable names in the original', () => {
       const config = { auth: 'Authorization: dontwriteme' };
       const pointers = { "/auth": "Authorization: ${SECRET}" }
-      sanitizeConfigForSafeWrite(config, pointers);
-      expect(config).to.eql({ auth: "Authorization: ${SECRET}" });
+      const cleanConfig = sanitizeConfigForSafeWrite(config, pointers);
+      expect(cleanConfig).to.eql({ auth: "Authorization: ${SECRET}" });
     });
 
     it('should replace nested variables', () => {
@@ -190,8 +190,8 @@ describe('configLoader module', () => {
         "/attr/key": "${MY_SECRET_KEY}"
       };
 
-      sanitizeConfigForSafeWrite(config, pointers);
-      expect(config).to.eql({
+      const cleanConfig = sanitizeConfigForSafeWrite(config, pointers);
+      expect(cleanConfig).to.eql({
         attr: { key: "${MY_SECRET_KEY}" }
       });
     });
@@ -202,8 +202,8 @@ describe('configLoader module', () => {
       };
       const pointers = { "/lesson": "an OAuth client needs a ${CLIENT_ID} and ${CLIENT_SECRET}" };
 
-      sanitizeConfigForSafeWrite(config, pointers);
-      expect(config).to.eql({
+      const cleanConfig = sanitizeConfigForSafeWrite(config, pointers);
+      expect(cleanConfig).to.eql({
         lesson: 'an OAuth client needs a ${CLIENT_ID} and ${CLIENT_SECRET}'
       });
     });

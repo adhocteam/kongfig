@@ -1,6 +1,5 @@
 import execute from './core';
 import adminApi from './adminApi';
-import colors from 'colors';
 import { configLoader, resolvePath, sanitizeConfigForSafeWrite } from './configLoader';
 import program from 'commander';
 import requester from './requester';
@@ -106,12 +105,12 @@ console.log(`Apply config to ${host}`.green);
 
 execute(config, adminApi({host, https, ignoreConsumers, cache}), screenLogger, removeRoutes, dryRun, localState)
     .then((out) => updateRouteIds(config, out))
-    .then(pretty('yaml'))
-    .then (updatedConfig => {
-        sanitizeConfigForSafeWrite(updatedConfig, envVarPointers);
+    .then(updatedConfig => sanitizeConfigForSafeWrite(updatedConfig, envVarPointers))
+    .then(updatedConfig => {
         if (!isEqual(config, updatedConfig) && !dryRun) {
             console.log(`Writing output to ${output}`);
-            writeFileSync(output, updatedConfig);
+            const yamlConfig = pretty("yaml")(updatedConfig);
+            writeFileSync(output, yamlConfig);
         } else {
             console.log('Config is up-to-date');
         }

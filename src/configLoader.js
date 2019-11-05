@@ -60,4 +60,6 @@ export function resolvePath(configPath) {
             jsonPointer.set(config, pointer, envPointers[pointer]);
         }
     }
+
+    return config;
 }
