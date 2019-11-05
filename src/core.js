@@ -729,27 +729,27 @@ function _routePlugin(serviceName, routeName, plugin) {
     const finalPlugin = swapConsumerReference(world, plugin);
     const consumerID = finalPlugin.attributes && getAssociatedEntityID(finalPlugin.attributes, 'consumer');
 
-    if (shouldBeRemoved(plugin)) {
-      if (world.hasRoutePlugin(serviceName, routeName, plugin.name, consumerID)) {
+    if (shouldBeRemoved(finalPlugin)) {
+      if (world.hasRoutePlugin(serviceName, routeName, finalPlugin.name, consumerID)) {
         return removeRoutePlugin(
           world.getServiceId(serviceName),
           world.getServiceRoute(serviceName, routeName).id,
-          world.getRoutePluginId(serviceName, routeName, plugin.name, consumerID)
+          world.getRoutePluginId(serviceName, routeName, finalPlugin.name, consumerID)
         );
       }
 
-      return noop({ type: 'noop-plugin', plugin });
+      return noop({ type: 'noop-plugin', plugin: finalPlugin });
     }
 
-    if (world.hasRoutePlugin(serviceName, routeName, plugin.name, consumerID)) {
-      if (world.isRoutePluginUpToDate(serviceName, routeName, plugin, consumerID)) {
-        return noop({ type: 'noop-plugin', plugin });
+    if (world.hasRoutePlugin(serviceName, routeName, finalPlugin.name, consumerID)) {
+      if (world.isRoutePluginUpToDate(serviceName, routeName, finalPlugin, consumerID)) {
+        return noop({ type: 'noop-plugin', plugin: finalPlugin });
       }
 
       return updateRoutePlugin(
         world.getServiceId(serviceName),
         world.getServiceRoute(serviceName, routeName).id,
-        world.getRoutePluginId(serviceName, routeName, plugin.name, consumerID),
+        world.getRoutePluginId(serviceName, routeName, finalPlugin.name, consumerID),
         finalPlugin.attributes
       );
     }
@@ -757,7 +757,7 @@ function _routePlugin(serviceName, routeName, plugin) {
     return addRoutePlugin(
       world.getServiceId(serviceName),
       world.getServiceRoute(serviceName, routeName).id,
-      plugin.name, finalPlugin.attributes
+      finalPlugin.name, finalPlugin.attributes
     );
   };
 }
@@ -769,23 +769,23 @@ function _servicePlugin(serviceName, plugin) {
     const finalPlugin = swapConsumerReference(world, plugin);
     const consumerID = finalPlugin.attributes && getAssociatedEntityID(finalPlugin.attributes, 'consumer');
 
-    if (shouldBeRemoved(plugin)) {
-      if (world.hasServicePlugin(serviceName, plugin.name, consumerID)) {
-        return removeServicePlugin(world.getServiceId(serviceName), world.getServicePluginId(serviceName, plugin.name, consumerID));
+    if (shouldBeRemoved(finalPlugin)) {
+      if (world.hasServicePlugin(serviceName, finalPlugin.name, consumerID)) {
+        return removeServicePlugin(world.getServiceId(serviceName), world.getServicePluginId(serviceName, finalPlugin.name, consumerID));
       }
 
-      return noop({ type: 'noop-plugin', plugin });
+      return noop({ type: 'noop-plugin', plugin: finalPlugin });
     }
 
-    if (world.hasServicePlugin(serviceName, plugin.name, consumerID)) {
-      if (world.isServicePluginUpToDate(serviceName, plugin, consumerID)) {
-        return noop({ type: 'noop-plugin', plugin });
+    if (world.hasServicePlugin(serviceName, finalPlugin.name, consumerID)) {
+      if (world.isServicePluginUpToDate(serviceName, finalPlugin, consumerID)) {
+        return noop({ type: 'noop-plugin', plugin: finalPlugin });
       }
 
-      return updateServicePlugin(world.getServiceId(serviceName), world.getServicePluginId(serviceName, plugin.name, consumerID), finalPlugin.attributes);
+      return updateServicePlugin(world.getServiceId(serviceName), world.getServicePluginId(serviceName, finalPlugin.name, consumerID), finalPlugin.attributes);
     }
 
-    return addServicePlugin(world.getServiceId(serviceName), plugin.name, finalPlugin.attributes);
+    return addServicePlugin(world.getServiceId(serviceName), finalPlugin.name, finalPlugin.attributes);
   };
 }
 
@@ -796,23 +796,23 @@ function _globalPlugin(plugin) {
     const finalPlugin = swapConsumerReference(world, plugin);
     const consumerID = finalPlugin.attributes && getAssociatedEntityID(finalPlugin.attributes, 'consumer');
 
-    if (shouldBeRemoved(plugin)) {
-      if (world.hasGlobalPlugin(plugin.name, consumerID)) {
-        return removeGlobalPlugin(world.getGlobalPluginId(plugin.name, consumerID));
+    if (shouldBeRemoved(finalPlugin)) {
+      if (world.hasGlobalPlugin(finalPlugin.name, consumerID)) {
+        return removeGlobalPlugin(world.getGlobalPluginId(finalPlugin.name, consumerID));
       }
 
-      return noop({ type: 'noop-global-plugin', plugin });
+      return noop({ type: 'noop-global-plugin', plugin: finalPlugin });
     }
 
-    if (world.hasGlobalPlugin(plugin.name, consumerID)) {
-      if (world.isGlobalPluginUpToDate(plugin, consumerID)) {
-        return noop({ type: 'noop-global-plugin', plugin });
+    if (world.hasGlobalPlugin(finalPlugin.name, consumerID)) {
+      if (world.isGlobalPluginUpToDate(finalPlugin, consumerID)) {
+        return noop({ type: 'noop-global-plugin', plugin: finalPlugin });
       }
 
-      return updateGlobalPlugin(world.getGlobalPluginId(plugin.name, consumerID), finalPlugin.attributes);
+      return updateGlobalPlugin(world.getGlobalPluginId(finalPlugin.name, consumerID), finalPlugin.attributes);
     }
 
-    return addGlobalPlugin(plugin.name, finalPlugin.attributes);
+    return addGlobalPlugin(finalPlugin.name, finalPlugin.attributes);
   }
 }
 
