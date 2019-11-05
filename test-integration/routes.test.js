@@ -1,6 +1,5 @@
 import { testAdminApi, tearDown } from "./util";
 import execute from "../src/core";
-import { screenLogger } from "../src/logger";
 
 const routeId = "c5b6914d-2bfd-4bb5-8f45-2e94cf9ff8b5";
 const path = "/foo";
@@ -60,7 +59,7 @@ it("should update a route name when it's a top level property", async () => {
             }
         ]
     };
-    await execute(config, testAdminApi, screenLogger);
+    await execute(config, testAdminApi);
     const route = await requestRoute({ method: "GET" });
     expect(route).toHaveProperty("name", "foo");
 });
