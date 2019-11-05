@@ -5,7 +5,7 @@ jest.mock('fs');
 import fs from 'fs';
 
 jest.mock('../src/environment');
-import lookUpEnvironmentVar from '../src/environment';
+import { getEnvironmentVarPointers, lookUpEnvironmentVar } from '../src/environment';
 
 import { 
   configLoader,
@@ -17,14 +17,21 @@ const realFs = jest.requireActual('fs');
 const rawYamlConfig = realFs.readFileSync(path.join(__dirname, 'files/configLoader.yml'), 'utf8');
 const rawJsonConfig = realFs.readFileSync(path.join(__dirname, 'files/configLoader.json'), 'utf8');
 
+const yamlConfigPointers = {
+  "/my_yaml_config/my_secret_key": "Key: ${MY_BIG_SECRET}",
+  "/my_yaml_config/dont_be_greedy": "two env variables??? an ${NOUN_1} of ${NOUN_2}",
+};
+
 describe('configLoader module', () => {
   afterEach(() => {
     lookUpEnvironmentVar.mockClear();
+    getEnvironmentVarPointers.mockClear();
   });
 
   describe('configLoader', () => {
     beforeAll(() => {
       lookUpEnvironmentVar.mockImplementation(variableName => process.env[variableName]);
+      getEnvironmentVarPointers.mockReturnValue(yamlConfigPointers);
       fs.readFileSync.mockImplementation(filePath => {
         if(/(\.yml)|(\.yaml)/.test(filePath)) {
           return rawYamlConfig;
@@ -67,7 +74,7 @@ describe('configLoader module', () => {
         let config;
         ['config.yml', 'config.yaml'].forEach(filename => {
           expect(() => {
-            config = configLoader('config.yml');
+            config = configLoader('config.yml')[0];
           }).not.to.throwException();
 
           expect('my_yaml_config' in config).to.be.ok();
@@ -78,7 +85,7 @@ describe('configLoader module', () => {
       it('should load JSON config files', () => {
         let config;
         expect(() => {
-          config = configLoader('config.json');
+          config = configLoader('config.json')[0];
         }).not.to.throwException();
         
         expect('myJsonConfig' in config).to.be.ok();
@@ -86,14 +93,14 @@ describe('configLoader module', () => {
       });
     });
 
-    describe('compiling config', () => {
+    describe('compiled config', () => {
       it("should not modify values with no templated variables", () => {
-        const config = configLoader('config.yml');
+        const config = configLoader('config.yml')[0];
         expect(config.my_yaml_config.property).to.be('value');
       });
 
       it("shouldn't accidentally use other variable formats", () => {
-        const config = configLoader('config.yml');
+        const config = configLoader('config.yml')[0];
         [
           "$$$_FAKE_VAR_$$$ is the old format",
           "#{} isn't right either",
@@ -103,7 +110,7 @@ describe('configLoader module', () => {
       });
 
       it("shouldn't try to perform a string replace on non-string types", () => {
-        const config = configLoader('config.yml');
+        const config = configLoader('config.yml')[0];
         [
           100,
           12.8,
@@ -124,26 +131,81 @@ describe('configLoader module', () => {
       });
 
       it('should replace valid defined environment variables', () => {
-        const config = configLoader('config.yml');
+        const config = configLoader('config.yml')[0];
         expect(config.my_yaml_config.my_secret_key).to.be('Key: no one can know');
       });
 
       it("should handle multiple values in one config value (avoid greedy matching errors)", () => {
         let config;
         expect(() => {
-          config = configLoader('config.yml');
+          config = configLoader('config.yml')[0];
         }).not.to.throwException();
 
         expect(config.my_yaml_config.dont_be_greedy)
           .to.be('two env variables??? an excess of riches');
       });
     });
+
+    describe("environment variable JSON pointers", () => {
+      it("should return the result of getEnvironmentVarPointers", () => {
+        const pointers = {
+          "/foo/3/bar": "${TEST_SECRET}",
+          "/x": "shhhh: ${BIG_SECRET}",
+          "/12/fancy": "${DONT_WRITE_ME"
+        };
+
+        getEnvironmentVarPointers.mockReturnValue(pointers);
+        const envPointers = configLoader('config.yml')[1];
+        expect(envPointers).to.eql(pointers);
+      });
+    });
   });
 
   describe('sanitizeConfigForSafeWrite', () => {
-    it('should return the config if the original and updated configs are identical', () => {
-      const plainConfig = { foo: 'bar' };
-      expect(sanitizeConfigForSafeWrite(plainConfig, plainConfig)).to.equal(plainConfig);
+    it('should not transform anything if the config has not changed', () => {
+      const config = { foo: 'bar' };
+      sanitizeConfigForSafeWrite(config, {});
+      expect(config).to.eql(config);
+    });
+    
+    it('should not transform non-string values', () => {
+      const config = { integer: 5, obj: {}, arr: [] };
+      sanitizeConfigForSafeWrite(config, {});
+      expect(config).to.eql(config);
+    });
+
+    it('should replace secrets with their variable names in the original', () => {
+      const config = { auth: 'Authorization: dontwriteme' };
+      const pointers = { "/auth": "Authorization: ${SECRET}" }
+      sanitizeConfigForSafeWrite(config, pointers);
+      expect(config).to.eql({ auth: "Authorization: ${SECRET}" });
+    });
+
+    it('should replace nested variables', () => {
+      const config = {
+        attr: { key: "dontwritemeimabigsecret" }
+      };
+
+      const pointers = {
+        "/attr/key": "${MY_SECRET_KEY}"
+      };
+
+      sanitizeConfigForSafeWrite(config, pointers);
+      expect(config).to.eql({
+        attr: { key: "${MY_SECRET_KEY}" }
+      });
+    });
+
+    it('should replace every match in lines with multiple variables in the original', () => {
+      const config = {
+        lesson: 'an OAuth client needs a fakeclientid and fakeclientsecret'
+      };
+      const pointers = { "/lesson": "an OAuth client needs a ${CLIENT_ID} and ${CLIENT_SECRET}" };
+
+      sanitizeConfigForSafeWrite(config, pointers);
+      expect(config).to.eql({
+        lesson: 'an OAuth client needs a ${CLIENT_ID} and ${CLIENT_SECRET}'
+      });
     });
   });
 });

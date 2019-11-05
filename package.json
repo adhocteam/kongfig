@@ -27,6 +27,8 @@
     "invariant": "^2.2.4",
     "isomorphic-fetch": "^2.2.0",
     "js-yaml": "^3.13.1",
+    "json-ptr": "^1.2.0",
+    "lodash.frompairs": "^4.0.1",
     "lodash.isempty": "^4.4.0",
     "lodash.isequal": "^4.5.0",
     "lodash.mergewith": "^4.6.2",

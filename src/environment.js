@@ -1,9 +1,13 @@
+import jsonPointer from "json-ptr";
+
 export const log = {
   info: message => console.log(message.green),
   error: message => console.error(message.red)
 };
 
-export default function lookUpEnvironmentVar(variableName) {
+const ENV_VAR_REGEX = /\$\{(.+?)\}/;
+
+export function lookUpEnvironmentVar(variableName) {
   const allowedNameRegex = /^[_a-zA-Z0-9]+$/;
   if (!allowedNameRegex.test(variableName)) {
       log.error(`Configuration variable name ${variableName} is invalid.\nAllowed characters are letters, numbers, and underscores.`);
@@ -16,4 +20,16 @@ export default function lookUpEnvironmentVar(variableName) {
   }
 
   return process.env[variableName];
+}
+
+export function getEnvironmentVarPointers(config) {
+  const pointers = jsonPointer.flatten(config);
+  for (let ptr in pointers) {
+      const value = pointers[ptr];
+      if (typeof value !== "string" || !ENV_VAR_REGEX.test(value)) {
+          delete pointers[ptr];
+      }
+  }
+
+  return pointers;
 }
