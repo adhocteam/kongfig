@@ -2262,6 +2262,7 @@ Array [
   Object {
     "params": Object {
       "body": Object {
+        "name": "mockbin",
         "paths": Array [
           "/mockbin",
         ],
@@ -2287,9 +2288,10 @@ Array [
       "created_at": "___created_at___",
       "destinations": null,
       "hosts": null,
+      "https_redirect_status_code": 426,
       "id": "2b47ba9b-761a-492d-9a0c-000000000002",
       "methods": null,
-      "name": null,
+      "name": "mockbin",
       "paths": Array [
         "/mockbin",
       ],
@@ -2311,6 +2313,7 @@ Array [
     "ok": true,
     "params": Object {
       "body": Object {
+        "name": "mockbin",
         "paths": Array [
           "/mockbin",
         ],
@@ -2428,6 +2431,7 @@ Array [
   Object {
     "params": Object {
       "body": Object {
+        "name": "mockbin",
         "paths": Array [
           "/mockbin",
         ],
@@ -2453,9 +2457,10 @@ Array [
       "created_at": "___created_at___",
       "destinations": null,
       "hosts": null,
+      "https_redirect_status_code": 426,
       "id": "2b47ba9b-761a-492d-9a0c-000000000003",
       "methods": null,
-      "name": null,
+      "name": "mockbin",
       "paths": Array [
         "/mockbin",
       ],
@@ -2477,6 +2482,7 @@ Array [
     "ok": true,
     "params": Object {
       "body": Object {
+        "name": "mockbin",
         "paths": Array [
           "/mockbin",
         ],
@@ -2511,21 +2517,22 @@ exports[`should apply service-route.example.yml 2`] = `
         plugins: []
         name: 2b47ba9b-761a-492d-9a0c-000000000003
         attributes:
-          strip_path: true
-          snis: null
-          hosts: null
-          name: null
-          methods: null
-          sources: null
-          preserve_host: false
-          regex_priority: 0
+          tags: null
           paths:
             - /mockbin
           destinations: null
           protocols:
             - http
             - https
-          tags: null
+          snis: null
+          hosts: null
+          name: mockbin
+          preserve_host: false
+          regex_priority: 0
+          strip_path: true
+          sources: null
+          https_redirect_status_code: 426
+          methods: null
     attributes:
       host: mockbin.com
       port: 80

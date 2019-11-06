@@ -459,7 +459,14 @@ function _createWorld({consumers, plugins, upstreams, services, certificates, _i
     },
 
     isRouteUpToDate: (serviceName, route) => {
-      return diff(route.attributes, world.getServiceRoute(serviceName, route.id).attributes).length == 0;
+      // Prior to Kong 1.0, routes didn't have names, but the kongfig config format allowed a route
+      // to specify a name as a top level property (as a sibling to attributes). Kong 1.0 added names
+      // as an actual property of a route, so it should be specified as attributes.name. For
+      // backwards compatibility, kongfig still uses the top level name property, but will prefer
+      // attributes.name. This only affects the diff, but an analogous change for requests to the
+      // admin API can be found in the updateServiceRoute and addServiceRoute functions in src/actions.js
+      const routeAttributes = { name: route.name, ...route.attributes };
+      return diff(routeAttributes, world.getServiceRoute(serviceName, route.id).attributes).length == 0;
     },
 
     isGlobalPluginUpToDate: (plugin, consumerID) => {
