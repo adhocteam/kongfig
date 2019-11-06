@@ -42,7 +42,7 @@ export function addServiceRoute(serviceId, { name, attributes }) {
         type: 'add-service-route',
         endpoint: {name: 'routes', params: {serviceId, routeName: name}},
         method: 'POST',
-        body: assign({}, attributes, { service: { id: serviceId } })
+        body: { name, ...attributes, service: { id: serviceId } }
     };
 }
 
@@ -59,7 +59,7 @@ export function updateServiceRoute(serviceId, { id, attributes, name }) {
         type: 'update-service-route',
         endpoint: {name: 'route', params: {serviceId, routeId: id, routeName: name}},
         method: 'PATCH',
-        body: { ...attributes, service: { id: serviceId } }
+        body: { name, ...attributes, service: { id: serviceId } }
     };
 }
 
