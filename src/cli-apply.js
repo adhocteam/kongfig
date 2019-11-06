@@ -104,9 +104,9 @@ const updateRouteIds = ({host, headers, services, ...config}, state) => {
 console.log(`Apply config to ${host}`.green);
 
 execute(config, adminApi({host, https, ignoreConsumers, cache}), screenLogger, removeRoutes, dryRun, localState)
-    .then((out) => updateRouteIds(config, out))
-    .then(updatedConfig => sanitizeConfigForSafeWrite(updatedConfig, envVarPointers))
-    .then(updatedConfig => {
+    .then(out => {
+        let updatedConfig = updateRouteIds(config, out);
+        updatedConfig = sanitizeConfigForSafeWrite(updatedConfig, envVarPointers);
         if (!isEqual(config, updatedConfig) && !dryRun) {
             console.log(`Writing output to ${output}`);
             const yamlConfig = pretty("yaml")(updatedConfig);

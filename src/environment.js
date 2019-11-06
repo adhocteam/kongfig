@@ -6,6 +6,7 @@ export const log = {
 };
 
 const ENV_VAR_REGEX = /\$\{(.+?)\}/;
+export const variableRegexSource = ENV_VAR_REGEX.source;
 
 export function lookUpEnvironmentVar(variableName) {
   const allowedNameRegex = /^[_a-zA-Z0-9]+$/;

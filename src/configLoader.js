@@ -1,10 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import yaml from 'js-yaml';
-import { getEnvironmentVarPointers, lookUpEnvironmentVar } from './environment';
+import { getEnvironmentVarPointers, lookUpEnvironmentVar, variableRegexSource } from './environment';
 import jsonPointer from 'json-ptr';
-
-const GLOBAL_ENV_VAR_REGEX = /\$\{(.+?)\}/g;
 
 export const log = {
     info: message => console.log(message.green),
@@ -28,8 +26,9 @@ export function configLoader(configPath) {
     }
 
     const envPointers = getEnvironmentVarPointers(config);
+    const globalVariableRegex = new RegExp(variableRegexSource, 'g');
     for (const pointer in envPointers) {
-        const compiledValue = envPointers[pointer].replace(GLOBAL_ENV_VAR_REGEX, (match, variableName) => {
+        const compiledValue = envPointers[pointer].replace(globalVariableRegex, (match, variableName) => {
             return lookUpEnvironmentVar(variableName);
         });
 

@@ -30,7 +30,12 @@ describe('configLoader module', () => {
 
   describe('configLoader', () => {
     beforeAll(() => {
-      lookUpEnvironmentVar.mockImplementation(variableName => process.env[variableName]);
+      lookUpEnvironmentVar.mockImplementation(variableName => {
+        if (process.env[variableName] === undefined) {
+          throw new Error(`Environment variable ${variableName} was not defined. Please define it to test successfully; lookUpEnvironmentVar should be tested in environment.test.js.`);
+        }
+        return process.env[variableName];
+      });
       getEnvironmentVarPointers.mockReturnValue(yamlConfigPointers);
       fs.readFileSync.mockImplementation(filePath => {
         if(/(\.yml)|(\.yaml)/.test(filePath)) {
@@ -45,6 +50,8 @@ describe('configLoader module', () => {
       process.env.MY_BIG_SECRET = 'no one can know';
       process.env.NOUN_1 = 'excess';
       process.env.NOUN_2 = 'riches';
+      process.env.TEST_SECRET = "in the vault";
+      process.env.DONT_WRITE_ME = "careful!";
 
       // suppress console error output: .red isn't defined, so these aren't useful
       jest.spyOn(log, 'error').mockImplementation(() => {});
@@ -150,8 +157,8 @@ describe('configLoader module', () => {
       it("should return the result of getEnvironmentVarPointers", () => {
         const pointers = {
           "/foo/3/bar": "${TEST_SECRET}",
-          "/x": "shhhh: ${BIG_SECRET}",
-          "/12/fancy": "${DONT_WRITE_ME"
+          "/x": "shhhh: ${MY_BIG_SECRET}",
+          "/12/fancy": "${DONT_WRITE_ME}"
         };
 
         getEnvironmentVarPointers.mockReturnValue(pointers);
