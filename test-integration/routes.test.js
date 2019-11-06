@@ -5,7 +5,7 @@ const routeId = "c5b6914d-2bfd-4bb5-8f45-2e94cf9ff8b5";
 const path = "/foo";
 const endpoint = {
     name: "route",
-    params: { routeId: routeId }
+    params: { routeName: 'foo' }
 };
 
 async function requestRoute(params) {
@@ -52,7 +52,7 @@ it("should update a route name when it's a top level property", async () => {
                         name: "foo",
                         id: routeId,
                         attributes: {
-                            paths: [path]
+                            paths: ['/bar']
                         }
                     }
                 ]
@@ -62,6 +62,7 @@ it("should update a route name when it's a top level property", async () => {
     await execute(config, testAdminApi);
     const route = await requestRoute({ method: "GET" });
     expect(route).toHaveProperty("name", "foo");
+    expect(route).toHaveProperty("paths", ['/bar'])
 });
 
 it("should update a route name when it's an attribute", async () => {
@@ -77,7 +78,7 @@ it("should update a route name when it's an attribute", async () => {
                         id: routeId,
                         attributes: {
                             name: "foo",
-                            paths: [path]
+                            paths: ['/bar']
                         }
                     }
                 ]
@@ -85,5 +86,7 @@ it("should update a route name when it's an attribute", async () => {
         ]
     };
     await execute(config, testAdminApi);
-    expect(await requestRoute({ method: "GET" })).toHaveProperty("name", "foo");
+    const route = await requestRoute({ method: "GET" });
+    expect(route).toHaveProperty("name", "foo");
+    expect(route).toHaveProperty("paths", ['/bar'])
 });
