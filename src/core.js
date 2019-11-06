@@ -329,8 +329,8 @@ function _createWorld({consumers, plugins, upstreams, services, certificates, _i
 
       return globalPluginId;
     },
-    hasRoute: (serviceName, { id }) => {
-      return Array.isArray(services) && services.some(service => service.name === serviceName && Array.isArray(service.routes) && service.routes.some(routes => routes.id == id ));
+    hasRoute: (serviceName, { name }) => {
+      return Array.isArray(services) && services.some(service => service.name === serviceName && Array.isArray(service.routes) && service.routes.some(route => route.name === name ));
     },
     hasRoutePlugin: (serviceName, routeName, pluginName, pluginConsumerID) => {
       const route = world.getServiceRoute(serviceName, routeName);
@@ -416,10 +416,10 @@ function _createWorld({consumers, plugins, upstreams, services, certificates, _i
       return aclId;
     },
 
-    getServiceRoute: (serviceName, routeNameId) => {
-      const route = world.getService(serviceName).routes.find(route => route.name === routeNameId || route.id === routeNameId);
+    getServiceRoute: (serviceName, routeName) => {
+      const route = world.getService(serviceName).routes.find(route => route.name === routeName);
 
-      invariant(route, `Unable to find route ${routeNameId}`);
+      invariant(route, `Unable to find route ${routeName}`);
 
       return route;
     },
@@ -459,7 +459,7 @@ function _createWorld({consumers, plugins, upstreams, services, certificates, _i
     },
 
     isRouteUpToDate: (serviceName, route) => {
-      return diff(route.attributes, world.getServiceRoute(serviceName, route.id).attributes).length == 0;
+      return diff(route.attributes, world.getServiceRoute(serviceName, route.name).attributes).length == 0;
     },
 
     isGlobalPluginUpToDate: (plugin, consumerID) => {
@@ -601,7 +601,7 @@ function removeOldRoutes(service, removeRoutes) {
     if (world.hasService(service.name)) {
       const oldService = world.getService(service.name);
       return oldService.routes
-        .filter((route) => !(service.routes.find((r) => r.id === route.id)))
+        .filter((route) => !(service.routes.find((r) => r.name === route.name)))
         .map((route) => removeServiceRoute(oldService.name, route));
     }
 
@@ -733,7 +733,7 @@ function _routePlugin(serviceName, routeName, plugin) {
       if (world.hasRoutePlugin(serviceName, routeName, finalPlugin.name, consumerID)) {
         return removeRoutePlugin(
           world.getServiceId(serviceName),
-          world.getServiceRoute(serviceName, routeName).id,
+          world.getServiceRoute(serviceName, routeName).name,
           world.getRoutePluginId(serviceName, routeName, finalPlugin.name, consumerID)
         );
       }
@@ -748,7 +748,7 @@ function _routePlugin(serviceName, routeName, plugin) {
 
       return updateRoutePlugin(
         world.getServiceId(serviceName),
-        world.getServiceRoute(serviceName, routeName).id,
+        world.getServiceRoute(serviceName, routeName).name,
         world.getRoutePluginId(serviceName, routeName, finalPlugin.name, consumerID),
         finalPlugin.attributes
       );
@@ -756,7 +756,7 @@ function _routePlugin(serviceName, routeName, plugin) {
 
     return addRoutePlugin(
       world.getServiceId(serviceName),
-      world.getServiceRoute(serviceName, routeName).id,
+      world.getServiceRoute(serviceName, routeName).name,
       finalPlugin.name, finalPlugin.attributes
     );
   };

@@ -29,7 +29,7 @@ const routes = (state, log, version) => {
   case 'update-route-plugin':
   case 'add-route-plugin':
   case 'remove-route-plugin':
-    const route = state.find((route) => route.id === params.routeId);
+    const route = state.find((route) => route.name === params.routeName);
     return [
       ...state,
       {
@@ -51,7 +51,7 @@ const routes = (state, log, version) => {
     let { name, ...rest } = parseRoute(content);
     return { name: params.routeName, ...rest, plugins: state.plugins };
   });
-  case 'remove-service-route': return state.filter(route => route.id !== params.routeId );
+  case 'remove-service-route': return state.filter(route => route.name !== params.routeName );
   default: return state;
   }
 };

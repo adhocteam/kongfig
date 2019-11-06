@@ -100,21 +100,8 @@ function parseServiceOrRoutePlugins(plugins, version) {
     return plugins.map(plugin => parsePlugin(plugin, version));
 }
 
-export function parseRoute({ id, created_at, updated_at, service, ...rest }, serviceName = '', config = {}) {
-    let name = null;
-    if (serviceName !== '' && config.services) {
-        const route = (config.services.find((s) => s.name === serviceName).routes || [])
-              .find((r) => r.id === id);
-        if (route) {
-            // Prior to Kong 1.0, routes didn't have names, but the kongfig config format allowed a route
-            // to specify a name as a top level property (as a sibling to attributes). Kong 1.0 added names
-            // as an actual property of a route, so it should be specified as attributes.name. For
-            // backwards compatibility, kongfig still uses the top level name property, but will prefer
-            // attributes.name.
-            name = route.attributes.name || route.name;
-        }
-    }
-    return { name, id, attributes: {...rest}, _info: { id, updated_at, created_at } };
+export function parseRoute({ name, id, created_at, updated_at, service, ...attributes }) {
+    return { name, id, attributes: attributes, _info: { id, updated_at, created_at } };
 }
 
 function parseRoutes(routes, serviceName= '', config = {}, version) {

@@ -79,33 +79,9 @@ else {
     }
 }
 
-const updateRouteIds = ({host, headers, services, ...config}, state) => {
-    const updatedServices = services.map(({routes, ...service}) => {
-        const updatedRoutes = routes.map(({name, id, ...route}) => {
-            const updatedId = state.services.find((s) => s.name === service.name).routes.find((r) => r.name == name).id;
-            return {
-                name,
-                id: updatedId,
-                ...route
-            };
-        });
-        return {
-            ...service,
-            routes: updatedRoutes
-        };
-    });
-    return {
-        host,
-        headers,
-        services: updatedServices,
-        ...config
-    };
-};
-
 console.log(`Apply config to ${host}`.green);
 
 execute(config, adminApi({host, https, ignoreConsumers, cache}), screenLogger, removeRoutes, dryRun, localState)
-    .then((out) => updateRouteIds(config, out))
     .then(pretty('yaml'))
     .then ((updatedConfig) => {
         if (!isEqual(config, updatedConfig ) && !dryRun) {
