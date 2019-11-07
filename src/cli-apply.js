@@ -14,7 +14,7 @@ import isEqual from 'lodash.isequal';
 program
     .version(require("../package.json").version)
     .option('--path <value>', 'Path to the configuration file')
-    .option('--host <value>', 'Kong admin host (default: localhost:8001)')
+    .option('--host <value>', 'Kong admin host (default: localhost:8001)', 'localhost:8001')
     .option('--output <value>', 'File with updated route ids overwrites path by default')
     .option('--https', 'Use https for admin API requests')
     .option('--no-cache', 'Do not cache kong state in memory')
@@ -46,7 +46,7 @@ if (program.socks) {
 console.log(`Loading config ${program.path}`);
 
 let config = configLoader(program.path);
-let host = program.host || config.host || 'localhost:8001';
+let host = program.host || config.host;
 let https = program.https || config.https || false;
 let ignoreConsumers = program.ignoreConsumers || !config.consumers || config.consumers.length === 0 || false;
 let output = resolvePath(program.output || program.path);
