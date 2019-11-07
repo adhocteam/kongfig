@@ -2394,116 +2394,18 @@ Array [
   },
   Object {
     "params": Object {
-      "endpoint": Object {
-        "name": "route",
-        "params": Object {
-          "routeId": "2b47ba9b-761a-492d-9a0c-000000000002",
-          "routeName": "2b47ba9b-761a-492d-9a0c-000000000002",
-          "serviceId": "mockbin",
+      "noop": true,
+      "route": Object {
+        "attributes": Object {
+          "paths": Array [
+            "/mockbin",
+          ],
         },
-      },
-      "method": "DELETE",
-      "type": "remove-service-route",
-    },
-    "type": "request",
-    "uri": "http://localhost:8001/routes/2b47ba9b-761a-492d-9a0c-000000000002",
-  },
-  Object {
-    "content": "",
-    "ok": true,
-    "params": Object {
-      "endpoint": Object {
-        "name": "route",
-        "params": Object {
-          "routeId": "2b47ba9b-761a-492d-9a0c-000000000002",
-          "routeName": "2b47ba9b-761a-492d-9a0c-000000000002",
-          "serviceId": "mockbin",
-        },
-      },
-      "method": "DELETE",
-      "type": "remove-service-route",
-    },
-    "status": 204,
-    "statusText": "No Content",
-    "type": "response",
-    "uri": "http://localhost:8001/routes/2b47ba9b-761a-492d-9a0c-000000000002",
-  },
-  Object {
-    "params": Object {
-      "body": Object {
         "name": "mockbin",
-        "paths": Array [
-          "/mockbin",
-        ],
-        "service": Object {
-          "id": "2b47ba9b-761a-492d-9a0c-000000000001",
-        },
       },
-      "endpoint": Object {
-        "name": "routes",
-        "params": Object {
-          "routeName": "mockbin",
-          "serviceId": "2b47ba9b-761a-492d-9a0c-000000000001",
-        },
-      },
-      "method": "POST",
-      "type": "add-service-route",
+      "type": "noop-route",
     },
-    "type": "request",
-    "uri": "http://localhost:8001/routes",
-  },
-  Object {
-    "content": Object {
-      "created_at": "___created_at___",
-      "destinations": null,
-      "hosts": null,
-      "https_redirect_status_code": 426,
-      "id": "2b47ba9b-761a-492d-9a0c-000000000003",
-      "methods": null,
-      "name": "mockbin",
-      "paths": Array [
-        "/mockbin",
-      ],
-      "preserve_host": false,
-      "protocols": Array [
-        "http",
-        "https",
-      ],
-      "regex_priority": 0,
-      "service": Object {
-        "id": "2b47ba9b-761a-492d-9a0c-000000000001",
-      },
-      "snis": null,
-      "sources": null,
-      "strip_path": true,
-      "tags": null,
-      "updated_at": "___updated_at___",
-    },
-    "ok": true,
-    "params": Object {
-      "body": Object {
-        "name": "mockbin",
-        "paths": Array [
-          "/mockbin",
-        ],
-        "service": Object {
-          "id": "2b47ba9b-761a-492d-9a0c-000000000001",
-        },
-      },
-      "endpoint": Object {
-        "name": "routes",
-        "params": Object {
-          "routeName": "mockbin",
-          "serviceId": "2b47ba9b-761a-492d-9a0c-000000000001",
-        },
-      },
-      "method": "POST",
-      "type": "add-service-route",
-    },
-    "status": 201,
-    "statusText": "Created",
-    "type": "response",
-    "uri": "http://localhost:8001/routes",
+    "type": "noop",
   },
 ]
 `;
@@ -2513,9 +2415,9 @@ exports[`should apply service-route.example.yml 2`] = `
   - name: mockbin
     plugins: []
     routes:
-      - id: 2b47ba9b-761a-492d-9a0c-000000000003
+      - id: 2b47ba9b-761a-492d-9a0c-000000000002
         plugins: []
-        name: 2b47ba9b-761a-492d-9a0c-000000000003
+        name: mockbin
         attributes:
           tags: null
           paths:
@@ -2526,7 +2428,6 @@ exports[`should apply service-route.example.yml 2`] = `
             - https
           snis: null
           hosts: null
-          name: mockbin
           preserve_host: false
           regex_priority: 0
           strip_path: true
