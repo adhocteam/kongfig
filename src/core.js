@@ -706,7 +706,7 @@ const swapConsumerReference = (world, plugin) => {
 };
 
 function validateRoute(route) {
-  if (!route.hasOwnProperty('name')) {
+  if (!route.name && !(route.attributes && route.attributes.name)) {
     throw new Error(`Route name is required for\n${JSON.stringify(route, null, '  ')}`);
   }
 }
