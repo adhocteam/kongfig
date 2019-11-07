@@ -39,6 +39,14 @@ async function getRoute() {
 
 beforeEach(tearDown);
 
+it("throws an error if the route doesn't have a name", async () => {
+    const config = cloneDeep(baseConfig);
+    delete config.services[0].routes[0].attributes.name;
+    await expect(execute(config, testAdminApi)).rejects.toThrow(
+        /^Route name is required/
+    );
+});
+
 // Run all tests with both route name locations
 [
     [baseConfig, "with route name in attributes"],
