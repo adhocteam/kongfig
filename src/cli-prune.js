@@ -6,7 +6,7 @@
 import program from 'commander';
 import remove from 'lodash.remove';
 
-import { configLoader, resolvePath } from './configLoader';
+import { configLoader, resolvePath, sanitizeConfigForSafeWrite } from './configLoader';
 import { writeFileSync } from 'fs';
 import { pretty } from './prettyConfig';
 import { shouldBeRemoved } from './utils'
@@ -17,7 +17,7 @@ program
   .option('--output <value>', 'File with updated route ids overwrites path by default')
   .parse(process.argv);
 
-let config = configLoader(program.path);
+let [config, envVarPointers] = configLoader(program.path);
 let output = resolvePath(program.output || program.path);
 
 remove(config.plugins, shouldBeRemoved);
@@ -32,5 +32,6 @@ config.services.forEach(function(service) {
   });
 });
 
-const yaml_config = pretty('yaml')(config);
-writeFileSync(output, yaml_config);
+sanitizeConfigForSafeWrite(config, envVarPointers);
+const yamlConfig = pretty('yaml')(config);
+writeFileSync(output, yamlConfig);

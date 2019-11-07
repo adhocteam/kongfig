@@ -1,6 +1,6 @@
 {
   "name": "@adhocteam/kongfig",
-  "version": "2.1.4",
+  "version": "2.2.0",
   "description": "A tool for Kong to allow declarative configuration.",
   "repository": "https://github.com/adhocteam/kongfig",
   "bin": {
@@ -27,6 +27,7 @@
     "invariant": "^2.2.4",
     "isomorphic-fetch": "^2.2.0",
     "js-yaml": "^3.13.1",
+    "json-ptr": "^1.2.0",
     "lodash.isempty": "^4.4.0",
     "lodash.isequal": "^4.5.0",
     "lodash.remove": "^4.5.0",

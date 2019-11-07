@@ -1,7 +1,8 @@
 import fs from 'fs';
-import mapDeep from 'deepdash/mapDeep';
 import path from 'path';
 import yaml from 'js-yaml';
+import { getEnvironmentVarPointers, lookUpEnvironmentVar, variableRegexSource } from './environment';
+import jsonPointer from 'json-ptr';
 
 export const log = {
     info: message => console.log(message.green),
@@ -14,36 +15,27 @@ export function configLoader(configPath) {
         throw new Error(`Supplied --path '${configPath}' doesn't exist`);
     }
 
-    let rawConfig;
+    let config;
     if(/(\.yml)|(\.yaml)/.test(configPath)) {
-        rawConfig = yaml.safeLoad(fs.readFileSync(configPath, 'utf8'));
+        config = yaml.safeLoad(fs.readFileSync(configPath, 'utf8'));
     } else if (/(\.json)/.test(configPath)) {
-        rawConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
     } else {
         log.error(`${configPath} is not a supported Kongfig config format. Supported formats are YAML and JSON.`);
         throw new Error(`${configPath} is not a supported Kongfig config format`);
     }
 
-    return mapDeep(rawConfig, configValue => {
-        if (typeof configValue !== 'string') {
-            return configValue;
-        }
-
-        return configValue.replace(/\$\{(.+?)\}/g, (match, variableName) => {
-            const allowedNameRegex = /^[_a-zA-Z0-9]+$/;
-            if (!allowedNameRegex.test(variableName)) {
-                log.error(`Configuration variable name ${variableName} is invalid.\nAllowed characters are letters, numbers, and underscores.`);
-                throw new Error(`Configuration variable name ${variableName} is invalid`);
-            }
-            
-            if (process.env[variableName] === undefined) {
-                log.error(`Configuration value ${variableName} was not present in the environment.`);
-                throw new Error(`Configuration value ${variableName} was not present in the environment.`);
-            }
-
-            return process.env[variableName];
+    const envPointers = getEnvironmentVarPointers(config);
+    const globalVariableRegex = new RegExp(variableRegexSource, 'g');
+    for (const pointer in envPointers) {
+        const compiledValue = envPointers[pointer].replace(globalVariableRegex, (match, variableName) => {
+            return lookUpEnvironmentVar(variableName);
         });
-    });
+
+        jsonPointer.set(config, pointer, compiledValue);
+    }
+
+    return [config, envPointers];
 }
 
 export function resolvePath(configPath) {
@@ -52,4 +44,23 @@ export function resolvePath(configPath) {
     }
 
     return path.resolve(process.cwd(), configPath);
+}
+
+/*
+    With the introduction of environment variable subsitution, we need to restore environment
+    variables in the written config for consistency + not writing secrets to disk. This replacement
+    function assumes that Kong will never change the value of a config property that contains a
+    secret. We can currently assume that Kong will never change the value of any property, period.
+    This function is safe against Kong removing fields.
+*/
+ export function sanitizeConfigForSafeWrite(config, envPointers) {
+    for (let pointer in envPointers) {
+        if (jsonPointer.has(config, pointer)) {
+            jsonPointer.set(config, pointer, envPointers[pointer]);
+        } else {
+            log.info(`Kong removed the config value at ${pointer}, not replacing...`)
+        }
+    }
+
+    return config;
 }
