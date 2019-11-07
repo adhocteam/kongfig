@@ -57,6 +57,8 @@ export function resolvePath(configPath) {
     for (let pointer in envPointers) {
         if (jsonPointer.has(config, pointer)) {
             jsonPointer.set(config, pointer, envPointers[pointer]);
+        } else {
+            log.info(`Kong removed the config value at ${pointer}, not replacing...`)
         }
     }
 
