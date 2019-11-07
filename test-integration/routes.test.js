@@ -1,92 +1,64 @@
+import cloneDeep from "lodash.clonedeep";
 import { testAdminApi, tearDown } from "./util";
 import execute from "../src/core";
 
-const routeId = "c5b6914d-2bfd-4bb5-8f45-2e94cf9ff8b5";
-const path = "/foo";
-const endpoint = {
-    name: "route",
-    params: { routeName: 'foo' }
+const baseConfig = {
+    services: [
+        {
+            name: "example",
+            attributes: {
+                url: "http://example.com"
+            },
+            routes: [
+                {
+                    attributes: {
+                        name: "foo",
+                        paths: ["/foo", "/bar"],
+                        regex_priority: 3
+                    }
+                }
+            ]
+        }
+    ]
 };
 
-async function requestRoute(params) {
-    const response = await testAdminApi.requestEndpoint(endpoint, params);
-    return await response.json();
+// Return config with route name moved from attribute to top level of route
+// Only handles a single service with a single route
+function topLevelRouteName(config) {
+    const newConfig = cloneDeep(config);
+    newConfig.services[0].routes[0].name =
+        newConfig.services[0].routes[0].attributes.name;
+    delete newConfig.services[0].routes[0].attributes.name;
+    return newConfig;
 }
 
-beforeEach(async () => {
-    await tearDown();
-    const response = await testAdminApi.requestEndpoint(
-        {
-            name: "services"
-        },
-        {
-            method: "POST",
-            body: {
-                name: "example",
-                url: "http://example.com"
-            }
-        }
-    );
-    const serviceId = (await response.json()).id;
-    await testAdminApi.requestEndpoint(endpoint, {
-        method: "PUT",
-        body: {
-            paths: [path],
-            service: {
-                id: serviceId
-            }
-        }
+// Assumes there's only one route configured
+async function getRoute() {
+    return (await testAdminApi.fetchRoutes())[0];
+}
+
+beforeEach(tearDown);
+
+// Run all tests with both route name locations
+[
+    [baseConfig, "with route name in attributes"],
+    [topLevelRouteName(baseConfig), "with top level route name"]
+].forEach(async ([config, testSuffix]) => {
+    it(`creates and updates a new route ${testSuffix}`, async () => {
+        await execute(config, testAdminApi);
+        expect(await getRoute()).toMatchObject({
+            name: "foo",
+            paths: expect.arrayContaining(["/foo", "/bar"]),
+            regex_priority: 3
+        });
+
+        const updatedConfig = cloneDeep(config);
+        updatedConfig.services[0].routes[0].attributes.paths = ["/bar", "/baz"];
+        await execute(updatedConfig, testAdminApi);
+        expect(await getRoute()).toMatchObject({
+            name: "foo",
+            paths: expect.arrayContaining(["/bar", "/baz"]),
+            regex_priority: 3
+        });
     });
-});
-
-it("should update a route name when it's a top level property", async () => {
-    const config = {
-        services: [
-            {
-                name: "example",
-                attributes: {
-                    url: "http://example.com"
-                },
-                routes: [
-                    {
-                        name: "foo",
-                        id: routeId,
-                        attributes: {
-                            paths: ['/bar']
-                        }
-                    }
-                ]
-            }
-        ]
-    };
-    await execute(config, testAdminApi);
-    const route = await requestRoute({ method: "GET" });
-    expect(route).toHaveProperty("name", "foo");
-    expect(route).toHaveProperty("paths", ['/bar'])
-});
-
-it("should update a route name when it's an attribute", async () => {
-    const config = {
-        services: [
-            {
-                name: "example",
-                attributes: {
-                    url: "http://example.com"
-                },
-                routes: [
-                    {
-                        id: routeId,
-                        attributes: {
-                            name: "foo",
-                            paths: ['/bar']
-                        }
-                    }
-                ]
-            }
-        ]
-    };
-    await execute(config, testAdminApi);
-    const route = await requestRoute({ method: "GET" });
-    expect(route).toHaveProperty("name", "foo");
-    expect(route).toHaveProperty("paths", ['/bar'])
 });
