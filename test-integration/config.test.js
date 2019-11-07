@@ -74,7 +74,7 @@ const addRouteNullKeys = state => { debugger; return ({
 fs.readdirSync(path.resolve(__dirname, './config')).forEach(filename => {
     it(`should apply ${filename}`, async () => {
         const configPath = path.resolve(__dirname, './config', filename);
-        const config = configLoader(configPath);
+        const [config, _envPointers] = configLoader(configPath);
 
         await execute(config, testAdminApi, logger);
         await execute(config, testAdminApi, logger); // all the actions should be no-op
