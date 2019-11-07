@@ -31,7 +31,7 @@ beforeEach(tearDown);
 
 it("throws an error if the route doesn't have a name", async () => {
     const config = cloneDeep(baseConfig);
-    delete config.services[0].routes[0].attributes.name;
+    delete config.services[0].routes[0].name;
     await expect(execute(config, testAdminApi)).rejects.toThrow(
         /^Route name is required/
     );
