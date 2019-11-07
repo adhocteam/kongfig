@@ -25,8 +25,6 @@ const plugins = (state, log, version) => {
 
 const routes = (state, log, version) => {
   const { params: { type, endpoint: { params, body } }, content } = log;
-  // console.log(type);
-  // console.log(JSON.stringify)
 
   switch (type) {
 
