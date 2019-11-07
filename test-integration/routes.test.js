@@ -58,7 +58,6 @@ it('creates, updates, and removes a route', async () => {
 
     route.ensure = "removed";
     await execute(config, testAdminApi);
-    console.log(JSON.stringify(await testAdminApi.fetchRoutes()));
     expect(await testAdminApi.fetchRoutes()).toEqual([]);
 });
 
