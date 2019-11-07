@@ -705,8 +705,15 @@ const swapConsumerReference = (world, plugin) => {
   return newPluginDef;
 };
 
+function validateRoute(route) {
+  if (!route.hasOwnProperty('name')) {
+    throw new Error(`Route name is required for\n${JSON.stringify(route, null, '  ')}`);
+  }
+}
+
 function _route(serviceName, route) {
   validateEnsure(route.ensure);
+  validateRoute(route);
 
   return world => {
     if (shouldBeRemoved(route)) {
