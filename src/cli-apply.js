@@ -1,7 +1,6 @@
 import execute from './core';
 import adminApi from './adminApi';
-import colors from 'colors';
-import { configLoader, resolvePath } from './configLoader';
+import { configLoader, resolvePath, sanitizeConfigForSafeWrite } from './configLoader';
 import program from 'commander';
 import requester from './requester';
 import {repeatableOptionCallback} from './utils';
@@ -45,7 +44,7 @@ if (program.socks) {
 
 console.log(`Loading config ${program.path}`);
 
-let config = configLoader(program.path);
+let [config, envVarPointers] = configLoader(program.path);
 let host = program.host || config.host || 'localhost:8001';
 let https = program.https || config.https || false;
 let ignoreConsumers = program.ignoreConsumers || !config.consumers || config.consumers.length === 0 || false;
@@ -82,11 +81,12 @@ else {
 console.log(`Apply config to ${host}`.green);
 
 execute(config, adminApi({host, https, ignoreConsumers, cache}), screenLogger, removeRoutes, dryRun, localState)
-    .then(pretty('yaml'))
-    .then ((updatedConfig) => {
-        if (!isEqual(config, updatedConfig ) && !dryRun) {
+    .then(state => {
+        config = sanitizeConfigForSafeWrite(config, envVarPointers);
+        if (!isEqual(config, updatedConfig) && !dryRun) {
             console.log(`Writing output to ${output}`);
-            writeFileSync(output, updatedConfig);
+            const yamlConfig = pretty("yaml")(updatedConfig);
+            writeFileSync(output, yamlConfig);
         } else {
             console.log('Config is up-to-date');
         }
