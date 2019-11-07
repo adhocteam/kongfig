@@ -11,8 +11,8 @@ const baseConfig = {
             },
             routes: [
                 {
+                    name: "foo",
                     attributes: {
-                        name: "foo",
                         paths: ["/foo", "/bar"],
                         regex_priority: 3
                     }
@@ -21,16 +21,6 @@ const baseConfig = {
         }
     ]
 };
-
-// Return config with route name moved from attribute to top level of route
-// Only handles a single service with a single route
-function topLevelRouteName(config) {
-    const newConfig = cloneDeep(config);
-    newConfig.services[0].routes[0].name =
-        newConfig.services[0].routes[0].attributes.name;
-    delete newConfig.services[0].routes[0].attributes.name;
-    return newConfig;
-}
 
 // Assumes there's only one route configured
 async function getRoute() {
@@ -47,26 +37,62 @@ it("throws an error if the route doesn't have a name", async () => {
     );
 });
 
-// Run all tests with both route name locations
-[
-    [baseConfig, "with route name in attributes"],
-    [topLevelRouteName(baseConfig), "with top level route name"]
-].forEach(async ([config, testSuffix]) => {
-    it(`creates and updates a new route ${testSuffix}`, async () => {
-        await execute(config, testAdminApi);
-        expect(await getRoute()).toMatchObject({
-            name: "foo",
-            paths: expect.arrayContaining(["/foo", "/bar"]),
-            regex_priority: 3
-        });
 
-        const updatedConfig = cloneDeep(config);
-        updatedConfig.services[0].routes[0].attributes.paths = ["/bar", "/baz"];
-        await execute(updatedConfig, testAdminApi);
-        expect(await getRoute()).toMatchObject({
-            name: "foo",
-            paths: expect.arrayContaining(["/bar", "/baz"]),
-            regex_priority: 3
-        });
+it('creates, updates, and removes a route', async () => {
+    await execute(baseConfig, testAdminApi);
+    expect(await getRoute()).toMatchObject({
+        name: "foo",
+        paths: expect.arrayContaining(["/foo", "/bar"]),
+        regex_priority: 3
+    });
+
+    const config = cloneDeep(baseConfig);
+    const route = config.services[0].routes[0];
+    route.attributes.paths = ["/bar", "/baz"];
+    await execute(config, testAdminApi);
+    expect(await getRoute()).toMatchObject({
+        name: "foo",
+        paths: expect.arrayContaining(["/bar", "/baz"]),
+        regex_priority: 3
+    });
+
+    route.ensure = "removed";
+    await execute(config, testAdminApi);
+    console.log(JSON.stringify(await testAdminApi.fetchRoutes()));
+    expect(await testAdminApi.fetchRoutes()).toEqual([]);
+});
+
+it('adds, updates, and removes a route plugin', async () => {
+    const pluginConfig = cloneDeep(baseConfig);
+    const route = pluginConfig.services[0].routes[0];
+
+    route.plugins = [
+        { name: "key-auth" },
+        { name: "rate-limiting", attributes: { config: { second: 1 } } }
+    ];
+    await execute(pluginConfig, testAdminApi);
+    let plugins = await testAdminApi.fetchRoutePlugins("foo");
+    expect(plugins).toHaveLength(2);
+    expect(plugins).toEqual(
+        expect.arrayContaining([
+            expect.objectContaining({ name: "key-auth" }),
+            expect.objectContaining({
+                name: "rate-limiting",
+                config: expect.objectContaining({ second: 1 })
+            })
+        ])
+    );
+
+    // Update rate-limiting plugin config
+    route.plugins[1].attributes.config.second = 2;
+    // Remove key-auth plugin
+    route.plugins[0].ensure = "removed";
+
+    await execute(pluginConfig, testAdminApi);
+    plugins = await testAdminApi.fetchRoutePlugins("foo");
+    expect(plugins).toHaveLength(1);
+    expect(plugins[0]).toMatchObject({
+        name: "rate-limiting",
+        config: { second: 2 }
     });
 });

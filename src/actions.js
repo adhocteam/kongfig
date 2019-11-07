@@ -59,7 +59,7 @@ export function updateServiceRoute(serviceId, { attributes, name }) {
         type: 'update-service-route',
         endpoint: {name: 'route', params: {serviceId, routeName: name}},
         method: 'PATCH',
-        body: { name, ...attributes, service: { id: serviceId } }
+        body: { ...attributes, service: { id: serviceId } }
     };
 }
 
