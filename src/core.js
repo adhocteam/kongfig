@@ -329,8 +329,8 @@ function _createWorld({consumers, plugins, upstreams, services, certificates, _i
 
       return globalPluginId;
     },
-    hasRoute: (serviceName, { id }) => {
-      return Array.isArray(services) && services.some(service => service.name === serviceName && Array.isArray(service.routes) && service.routes.some(routes => routes.id == id ));
+    hasRoute: (serviceName, { name }) => {
+      return Array.isArray(services) && services.some(service => service.name === serviceName && Array.isArray(service.routes) && service.routes.some(route => route.name === name ));
     },
     hasRoutePlugin: (serviceName, routeName, pluginName, pluginConsumerID) => {
       const route = world.getServiceRoute(serviceName, routeName);
@@ -416,10 +416,10 @@ function _createWorld({consumers, plugins, upstreams, services, certificates, _i
       return aclId;
     },
 
-    getServiceRoute: (serviceName, routeNameId) => {
-      const route = world.getService(serviceName).routes.find(route => route.name === routeNameId || route.id === routeNameId);
+    getServiceRoute: (serviceName, routeName) => {
+      const route = world.getService(serviceName).routes.find(route => route.name === routeName);
 
-      invariant(route, `Unable to find route ${routeNameId}`);
+      invariant(route, `Unable to find route ${routeName}`);
 
       return route;
     },
@@ -459,14 +459,7 @@ function _createWorld({consumers, plugins, upstreams, services, certificates, _i
     },
 
     isRouteUpToDate: (serviceName, route) => {
-      // Prior to Kong 1.0, routes didn't have names, but the kongfig config format allowed a route
-      // to specify a name as a top level property (as a sibling to attributes). Kong 1.0 added names
-      // as an actual property of a route, so it should be specified as attributes.name. For
-      // backwards compatibility, kongfig still uses the top level name property, but will prefer
-      // attributes.name. This only affects the diff, but an analogous change for requests to the
-      // admin API can be found in the updateServiceRoute and addServiceRoute functions in src/actions.js
-      const routeAttributes = { name: route.name, ...route.attributes };
-      return diff(routeAttributes, world.getServiceRoute(serviceName, route.id).attributes).length == 0;
+      return diff(route.attributes, world.getServiceRoute(serviceName, route.name).attributes).length == 0;
     },
 
     isGlobalPluginUpToDate: (plugin, consumerID) => {
@@ -608,7 +601,7 @@ function removeOldRoutes(service, removeRoutes) {
     if (world.hasService(service.name)) {
       const oldService = world.getService(service.name);
       return oldService.routes
-        .filter((route) => !(service.routes.find((r) => r.id === route.id)))
+        .filter((route) => !(service.routes.find((r) => r.name === route.name)))
         .map((route) => removeServiceRoute(oldService.name, route));
     }
 
@@ -705,8 +698,15 @@ const swapConsumerReference = (world, plugin) => {
   return newPluginDef;
 };
 
+function validateRoute(route) {
+  if (!route.name) {
+    throw new Error(`Route name is required for\n${JSON.stringify(route, null, '  ')}`);
+  }
+}
+
 function _route(serviceName, route) {
   validateEnsure(route.ensure);
+  validateRoute(route);
 
   return world => {
     if (shouldBeRemoved(route)) {
@@ -740,7 +740,7 @@ function _routePlugin(serviceName, routeName, plugin) {
       if (world.hasRoutePlugin(serviceName, routeName, finalPlugin.name, consumerID)) {
         return removeRoutePlugin(
           world.getServiceId(serviceName),
-          world.getServiceRoute(serviceName, routeName).id,
+          world.getServiceRoute(serviceName, routeName).name,
           world.getRoutePluginId(serviceName, routeName, finalPlugin.name, consumerID)
         );
       }
@@ -755,7 +755,7 @@ function _routePlugin(serviceName, routeName, plugin) {
 
       return updateRoutePlugin(
         world.getServiceId(serviceName),
-        world.getServiceRoute(serviceName, routeName).id,
+        world.getServiceRoute(serviceName, routeName).name,
         world.getRoutePluginId(serviceName, routeName, finalPlugin.name, consumerID),
         finalPlugin.attributes
       );
@@ -763,7 +763,7 @@ function _routePlugin(serviceName, routeName, plugin) {
 
     return addRoutePlugin(
       world.getServiceId(serviceName),
-      world.getServiceRoute(serviceName, routeName).id,
+      world.getServiceRoute(serviceName, routeName).name,
       finalPlugin.name, finalPlugin.attributes
     );
   };

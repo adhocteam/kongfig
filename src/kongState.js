@@ -34,9 +34,9 @@ export default async (adminApi) => {
         const services = await adminApi.fetchServices();
         servicesWithPluginsAndRoutes = await Promise.all(services.map(async item => {
             const plugins = await adminApi.fetchServicePlugins(item.id);
-            const routes = await adminApi.fetchServiceRoutes(item.name);
+            const routes = await adminApi.fetchServiceRoutes(item.id);
             const routesWithPlugins = await Promise.all(routes.map(async route => {
-                const routePlugins = await adminApi.fetchRoutePlugins(route.id);
+                const routePlugins = await adminApi.fetchRoutePlugins(route.name);
 
                 return {...route, plugins: routePlugins};
             }));

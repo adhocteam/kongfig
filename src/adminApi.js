@@ -25,7 +25,7 @@ function createApi({ router, getPaginatedJson, ignoreConsumers }) {
         fetchConsumerCredentials: (consumerId, plugin) => getPaginatedJson(router({name: 'consumer-credentials', params: {consumerId, plugin}})),
         fetchConsumerAcls: (consumerId) => getPaginatedJson(router({name: 'consumer-acls', params: {consumerId}})),
         fetchRoutes:() => getPaginatedJson(router({ name: 'routes' })),
-        fetchRoutePlugins: (routeId) => getPaginatedJson(router({ name: 'route-plugins', params: {routeId} })),
+        fetchRoutePlugins: (routeName) => getPaginatedJson(router({ name: 'route-plugins', params: {routeName} })),
         fetchServices:() => getPaginatedJson(router({ name: 'services' })),
         fetchServicePlugins: serviceId => getPaginatedJson(router({name: 'service-plugins', params: {serviceId}})),
         fetchServiceRoutes: serviceId => getPaginatedJson(router({ name: 'service-routes', params: {serviceId} })),

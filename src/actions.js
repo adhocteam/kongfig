@@ -46,44 +46,44 @@ export function addServiceRoute(serviceId, { name, attributes }) {
     };
 }
 
-export function removeServiceRoute(serviceId, { id, name }) {
+export function removeServiceRoute(serviceId, { name }) {
     return {
         type: 'remove-service-route',
-        endpoint: {name: 'route', params: {serviceId, routeId: id, routeName: name}},
+        endpoint: {name: 'route', params: {serviceId, routeName: name}},
         method: 'DELETE',
     };
 }
 
-export function updateServiceRoute(serviceId, { id, attributes, name }) {
+export function updateServiceRoute(serviceId, { attributes, name }) {
     return {
         type: 'update-service-route',
-        endpoint: {name: 'route', params: {serviceId, routeId: id, routeName: name}},
+        endpoint: {name: 'route', params: {serviceId, routeName: name}},
         method: 'PATCH',
-        body: { name, ...attributes, service: { id: serviceId } }
+        body: { ...attributes, service: { id: serviceId } }
     };
 }
 
-export function addRoutePlugin(serviceId, routeId, pluginName, params) {
+export function addRoutePlugin(serviceId, routeName, pluginName, params) {
     return {
         type: 'add-route-plugin',
-        endpoint: {name: 'route-plugins', params: {serviceId, routeId, pluginName}},
+        endpoint: {name: 'route-plugins', params: {serviceId, routeName, pluginName}},
         method: 'POST',
         body: assign({}, params, {name: pluginName})
     };
 }
 
-export function removeRoutePlugin(serviceId, routeId, pluginId) {
+export function removeRoutePlugin(serviceId, routeName, pluginId) {
     return {
         type: 'remove-route-plugin',
-        endpoint: {name: 'route-plugin', params: {serviceId, routeId, pluginId}},
+        endpoint: {name: 'route-plugin', params: {serviceId, routeName, pluginId}},
         method: 'DELETE',
     };
 }
 
-export function updateRoutePlugin(serviceId, routeId, pluginId, params) {
+export function updateRoutePlugin(serviceId, routeName, pluginId, params) {
     return {
         type: 'update-route-plugin',
-        endpoint: {name: 'route-plugin', params: {serviceId, routeId, pluginId}},
+        endpoint: {name: 'route-plugin', params: {serviceId, routeName, pluginId}},
         method: 'PATCH',
         body: params
     };

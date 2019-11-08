@@ -37,21 +37,6 @@ const ignoreConfigOrder = state => ({
     services: state.services.sort((a, b) => a.name > b.name ? 1 : -1),
 });
 
-// In Kong <1.0, routes don't have names. As a workaround, when we
-// parse the route payload from kong, we set the name property to
-// the route's id (see the parseRoute function at src/readAdminApi.js:163).
-// This function sets route.name to route.id in our local state.
-const fixRouteNames = state => ({
-    ...state,
-    services: state.services.map(service => ({
-        ...service,
-        routes: service.routes.map(route => ({
-            ...route,
-            name: route.id,
-        })),
-    }))
-});
-
 // It appears that kong returns the semi-optional paths, methods,
 // and hosts keys in some HTTP responses, but not in others.
 // This function adds those null keys for testing purposes.
@@ -82,6 +67,6 @@ fs.readdirSync(path.resolve(__dirname, './config')).forEach(filename => {
 
         expect(getLog()).toMatchSnapshot();
         expect(exportToYaml(ignoreKeys(kongState))).toMatchSnapshot();
-        expect(ignoreConfigOrder(fixRouteNames(getLocalState()))).toEqual(addRouteNullKeys(kongState));
+        expect(ignoreConfigOrder(getLocalState())).toEqual(addRouteNullKeys(kongState));
     });
 });
