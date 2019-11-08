@@ -82,7 +82,7 @@ console.log(`Apply config to ${host}`.green);
 
 execute(config, adminApi({host, https, ignoreConsumers, cache}), screenLogger, removeRoutes, dryRun, localState)
     .then(state => {
-        config = sanitizeConfigForSafeWrite(config, envVarPointers);
+        const updatedConfig = sanitizeConfigForSafeWrite(config, envVarPointers);
         if (!isEqual(config, updatedConfig) && !dryRun) {
             console.log(`Writing output to ${output}`);
             const yamlConfig = pretty("yaml")(updatedConfig);
