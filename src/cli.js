@@ -1,7 +1,7 @@
 import commander from 'commander';
 
 commander
-    .version(__VERSION__)
+    .version(__VERSION__, '-v, --version, --compiled-version')
     .allowUnknownOption()
     .command('apply', 'Apply config to a kong server', {isDefault: true})
     .command('dump', 'Dump the configuration from a kong server')
