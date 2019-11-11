@@ -9,7 +9,6 @@ import {addSchemasFromOptions} from './consumerCredentials';
 import program from 'commander';
 
 program
-    .version(require("../package.json").version)
     .option('-f, --format <value>', 'Export format [screen, json, yaml] (default: yaml)', /^(screen|json|yaml|yml)$/, 'yaml')
     .option('--host <value>', 'Kong admin host (default: localhost:8001)', 'localhost:8001')
     .option('--https', 'Use https for admin API requests')

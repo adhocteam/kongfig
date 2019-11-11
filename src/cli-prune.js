@@ -12,7 +12,6 @@ import { pretty } from './prettyConfig';
 import { shouldBeRemoved } from './utils'
 
 program
-  .version(require("../package.json").version)
   .option('--path <value>', 'Path to the configuration file')
   .option('--output <value>', 'File with updated route ids overwrites path by default')
   .parse(process.argv);

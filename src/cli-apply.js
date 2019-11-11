@@ -11,7 +11,6 @@ import {addSchemasFromOptions, addSchemasFromConfig} from './consumerCredentials
 import isEqual from 'lodash.isequal';
 
 program
-    .version(require("../package.json").version)
     .option('--path <value>', 'Path to the configuration file')
     .option('--host <value>', 'Kong admin host (default: localhost:8001)')
     .option('--output <value>', 'File with updated route ids overwrites path by default')
