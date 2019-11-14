@@ -16,6 +16,11 @@ Kongfig is currently compatible with Kong version 0.14.x-0.15.x. 1.x compatibili
 
 ## Install
 
+### Adhoc Specific Install
+* clone the project
+* run `npm build` to generate the lib folder
+* add the `${project_path}/bin` to your system's environment variables (optional)
+
 ### Manually
 We recommend installing Kongfig globally
 
